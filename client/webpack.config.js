@@ -46,7 +46,7 @@ const entry = {
 const output = {
   path: publicDir,
   publicPath:
-    process.env.GITHUB_PAGES === true
+    process.env.GITHUB_PAGES === "true"
       ? "https://wenbing.github.io/web-ish/"
       : "/",
   filename: "[name].js",
