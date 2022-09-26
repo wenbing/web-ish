@@ -6,7 +6,7 @@ function AsyncCompnent() {
   const theme = useContext(App.ThemeContext);
   const [count, setCount] = useState(0);
   useEffect(() => {
-    document.title = `You clicked ${count} times`;
+    // document.title = `You clicked ${count} times`;
   });
   return (
     <>

@@ -1,4 +1,6 @@
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense } from "react";
+import DateCard from "./DateCard";
+import Weather from "./Weather";
 import "./App.css";
 
 const themes = {
@@ -17,27 +19,21 @@ const AsyncCompnent = React.lazy(() =>
 );
 
 function App(props) {
-  const [date, setDate] = useState(props.date);
-  useEffect(() => {
-    const intervalID = setInterval(() => {
-      setDate(Date.now());
-    }, 1000);
-    return () => {
-      clearInterval(intervalID);
-    };
-  });
-  const time = new Date(date).toUTCString();
   return (
-    <div className="container">
+    <>
+      <DateCard date={props.date}></DateCard>
+
+      <Weather initialCity="110000"></Weather>
+      <Weather initialCity="310000"></Weather>
+      <Weather initialCity="500000"></Weather>
+      <Weather initialCity="341881"></Weather>
+
       <ThemeContext.Provider value={themes.dark}>
-        <h2 className="time-block">
-          <span className="lcdd-font">{time}</span>
-        </h2>
         <Suspense fallback={<div>Loading...</div>}>
-          <AsyncCompnent />
+          {/* <AsyncCompnent /> */}
         </Suspense>
       </ThemeContext.Provider>
-    </div>
+    </>
   );
 }
 

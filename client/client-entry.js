@@ -12,4 +12,4 @@ const appProps = window.INITIAL_DATA;
 console.log(appProps);
 const app = <App {...appProps} />;
 
-const root = ReactDOM.hydrateRoot(document.getElementById("hello-world"), app);
+const root = ReactDOM.hydrateRoot(document.getElementById("app"), app);

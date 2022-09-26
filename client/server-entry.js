@@ -22,15 +22,17 @@ export async function createError(opts) {
   const title = "Error!";
   const doc = `<!doctype html>
 <html>
-    <head>
-        <title>${title}</title>
-        ${assets.header.join("\n\t\t")}
-    </head>
-    <body>
-        <pre id="error-stack">${error.stack}</pre>
-        <script>window.INITIAL_DATA = ${JSON.stringify(initialData)}</script>
-        ${assets.body.join("\n\t\t")}
-    </body>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${title}</title>
+    ${assets.header.join("\n\t\t")}
+  </head>
+  <body>
+    <pre id="error-stack">${error.stack}</pre>
+    <script>window.INITIAL_DATA = ${JSON.stringify(initialData)}</script>
+    ${assets.body.join("\n\t\t")}
+  </body>
 </html>
     `;
   return doc;
@@ -70,18 +72,20 @@ export async function createDoc(opts) {
     fileSystem: opts.fs || fs,
   });
 
-  const title = "Hello World!";
+  const title = "Labs";
   const doc = `<!doctype html>
 <html>
-    <head>
-        <title>${title}</title>
-        ${assets.header.join("\n\t\t")}
-    </head>
-    <body>
-        <div id="hello-world">${content}</div>
-        <script>window.INITIAL_DATA = ${JSON.stringify(initialData)}</script>
-        ${assets.body.join("\n\t\t")}
-    </body>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${title}</title>
+    ${assets.header.join("\n\t\t")}
+  </head>
+  <body>
+    <div id="app">${content}</div>
+    <script>window.INITIAL_DATA = ${JSON.stringify(initialData)}</script>
+    ${assets.body.join("\n\t\t")}
+  </body>
 </html>
     `;
   return doc;

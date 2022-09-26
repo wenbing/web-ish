@@ -2,16 +2,65 @@
   font-family: "LcdD";
   src: url("./LcdD.ttf");
 }
-h1 {
-  text-decoration: underline;
+body {
+  margin: 0;
 }
 
-.lcdd-font {
-  font-family: "LcdD";
-  font-style: normal;
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+}
+
+.block {
+  flex: auto;
+  max-width: 200px;
+  height: 80px;
+  line-height: 70px;
+  margin: 10px 0;
+  border-radius: 8px;
+  background-color: azure;
+  text-align: center;
 }
 
 .time-block {
-  text-align: center;
-  font-size: 4rem;
+  font-family: "LcdD";
+  font-style: normal;
+  font-size: 3rem;
+}
+
+.weather-block {
+  font-size: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.weather-icon {
+  font-size: 3.2rem;
+  width: 80px;
+}
+.weather-textinfo {
+  display: inline-block;
+  line-height: 1.1rem;
+  text-align: left;
+  font-size: 0.8rem;
+  width: 80px;
+}
+.weather-temperature {
+  font-size: 2rem;
+  margin-left: -1px;
+}
+.weather-block sup {
+  font-size: medium;
+  font-weight: bold;
+}
+
+.weather-location-icon {
+  display: inline-block;
+  transform: rotate(315deg);
+  /* translate: 2px -2px; */
+  margin-right: 2px;
+  color: #000000ba;
 }

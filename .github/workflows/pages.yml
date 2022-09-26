@@ -35,7 +35,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: '16.16'
+          node-version: "16.16"
       - name: Build Static Files And Pages
         run: |
           rm -rf public server/lib 
@@ -47,7 +47,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload entire repository
-          path: './public'
+          path: "./public"
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
