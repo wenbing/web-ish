@@ -26,7 +26,7 @@ function App(props) {
       clearInterval(intervalID);
     };
   });
-  const time = new Date(date).toLocaleTimeString();
+  const time = new Date(date).toUTCString();
   return (
     <div className="container">
       <ThemeContext.Provider value={themes.dark}>
