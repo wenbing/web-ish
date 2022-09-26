@@ -43,6 +43,7 @@ jobs:
           NODE_ENV=production npx webpack --config client/webpack.config.js
           NODE_ENV=production npx webpack --config server/webpack.config.js
           NODE_ENV=production node server/build.js
+          NODE_ENV=production node server/cityInfo.js
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
