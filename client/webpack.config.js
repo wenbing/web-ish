@@ -45,7 +45,10 @@ const entry = {
 };
 const output = {
   path: publicDir,
-  publicPath: "/",
+  publicPath:
+    process.env.GITHUB_PAGES === true
+      ? "https://wenbing.github.io/web-ish/"
+      : "/",
   filename: "[name].js",
   chunkFilename: "[name].js",
 };
