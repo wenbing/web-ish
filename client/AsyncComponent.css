@@ -1,0 +1,9 @@
+.async-component {
+  border: 5px solid blue;
+  padding: 10px;
+}
+.async-button {
+  margin-bottom: 10px;
+  border: 5px solid blue;
+  background-color: white;
+}

@@ -1,0 +1,6 @@
+#error-stack,
+.error-stack {
+  width: 100%;
+  word-break: break-all;
+  white-space: pre-line;
+}

@@ -1,0 +1,17 @@
+@font-face {
+  font-family: "LcdD";
+  src: url("./LcdD.ttf");
+}
+h1 {
+  text-decoration: underline;
+}
+
+.lcdd-font {
+  font-family: "LcdD";
+  font-style: normal;
+}
+
+.time-block {
+  text-align: center;
+  font-size: 4rem;
+}
