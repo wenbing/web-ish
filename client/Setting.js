@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Nav from "./Nav";
 import defaultCities from "./defaultCities";
 
+import { publicPath } from "./routes";
+
 function useCities(initialCities) {
   const [cities, setCities] = useState([]);
 
@@ -9,7 +11,7 @@ function useCities(initialCities) {
   useEffect(() => {
     setCities([]);
     async function fetchInfo() {
-      const allCities = await (await fetch("/cities.json")).json();
+      const allCities = await (await fetch(`${publicPath}/cities.json`)).json();
       const citiesByAdCode = Object.keys(allCities).reduce((acc, key) => {
         return allCities[key].reduce((acc, item) => {
           Object.assign(acc, { [item.adcode]: item });

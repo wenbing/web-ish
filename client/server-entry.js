@@ -20,8 +20,9 @@ export async function createError(opts) {
     fileSystem: opts.fs || fs,
   });
   const route = match(pathname);
-  const destination = route ? route.destination : null;
-  const initialData = { route: { pathname, destination } };
+  const initialData = {
+    route: { pathname: route.pathname, destination: route.destination },
+  };
   const title = "Error!";
   const doc = `<!doctype html>
 <html>
@@ -51,17 +52,23 @@ export async function createDoc(opts) {
   const route = match(pathname);
   let Component;
   let appData;
-  if (route) {
+  if (route.destination) {
     Component = await route.component;
     if (typeof Component.getInitialData === "function") {
       appData = await Component.getInitialData();
     }
-    initialData.route = { pathname, destination: route.destination };
+    initialData.route = {
+      pathname: route.pathname,
+      destination: route.destination,
+    };
     initialData[route.name] = appData;
   } else {
     Component = App;
     appData = {};
-    initialData.route = { pathname, destination: null };
+    initialData.route = {
+      pathname: route.pathname,
+      destination: route.destination,
+    };
   }
   const app = <Component route={initialData.route} {...appData} />;
   const content = await new Promise((resolve, reject) => {

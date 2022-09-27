@@ -4,7 +4,7 @@ import ReactDOM, { createRoot } from "react-dom/client";
 
 import App from "./App";
 import * as css from "./main.css";
-import { match } from "./routes";
+import { match, publicPath } from "./routes";
 
 if (process.env.NODE_ENV === "development") {
   import("./tape-test");
@@ -15,9 +15,9 @@ console.log(INITIAL_DATA);
 
 (async function main() {
   async function initApp() {
-    const route = match(INITIAL_DATA.route.pathname);
-    const Component = route ? await route.component : App;
-    const data = route ? INITIAL_DATA[route.name] : {};
+    const route = match(`${publicPath}${INITIAL_DATA.route.pathname}`);
+    const Component = route.destination ? await route.component : App;
+    const data = route.destination ? INITIAL_DATA[route.name] : {};
     const appProps = {
       render: handleRender,
       route: INITIAL_DATA.route,
@@ -30,17 +30,19 @@ console.log(INITIAL_DATA);
     const route = match(pathname);
     let Component;
     let appProps = { render: handleRender };
-    if (route) {
+    if (route.destination) {
       Component = await route.component;
       Object.assign(appProps, {
-        route: { pathname, destination: route.destination },
+        route: { pathname: route.pathname, destination: route.destination },
       });
       if (typeof Component.getInitialData === "function") {
         Object.assign(appProps, await Component.getInitialData());
       }
     } else {
       Component = App;
-      Object.assign(appProps, { route: { pathname, destination: null } });
+      Object.assign(appProps, {
+        route: { pathname: route.pathname, destination: route.destination },
+      });
     }
     return <Component {...appProps} />;
   }

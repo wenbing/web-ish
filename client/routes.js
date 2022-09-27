@@ -4,6 +4,8 @@ const Setting = import(
   /* webpackPreload:true, webpackChunkName: 'setting' */ "./Setting"
 ).then((m) => m.default);
 
+export const publicPath = "/web-ish";
+
 export const routes = [
   {
     name: "app",
@@ -20,13 +22,14 @@ export const routes = [
 ];
 
 export function match(pathname) {
+  const striped = pathname.slice(publicPath.length);
   const len = routes.length;
   for (let i = 0; i < len; i++) {
     const route = routes[i];
-    const matched = pathname.match(route.source);
+    const matched = striped.match(route.source);
     if (matched) {
-      return route;
+      return Object.assign({}, route, { pathname: striped });
     }
   }
-  return null;
+  return { pathname: striped, destination: null };
 }

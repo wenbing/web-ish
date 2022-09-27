@@ -48,7 +48,7 @@ const output = {
   publicPath:
     process.env.GITHUB_PAGES === "true"
       ? "https://wenbing.github.io/web-ish/"
-      : "/",
+      : "/web-ish/",
   filename: "[name].js",
   chunkFilename: "[name].js",
 };
@@ -86,7 +86,13 @@ const client = {
   stats: { logging: "info" },
 };
 if (mode === "development") {
-  client.devServer = { hot: true, port: 3000, setupMiddlewares };
+  client.devServer = {
+    hot: true,
+    port: 3000,
+    setupMiddlewares,
+    static: { directory: publicDir, publicPath: "/web-ish" },
+    devMiddleware: { publicPath: "/web-ish" },
+  };
 } else if (mode === "production") {
   client.optimization = {
     moduleIds: "deterministic",
