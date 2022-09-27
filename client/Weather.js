@@ -7,6 +7,13 @@ const icons = {
   雨: "🌧",
   雪: "❄️",
 };
+const bgColors = {
+  晴: "rgba(255, 233, 99, 61.8%)",
+  云: "#bdf7ff",
+  阴: "rgba(189, 247, 255, 61.8%)",
+  雨: "rgba(75, 89, 94, 61.8%)",
+  雪: "#70dde1",
+};
 
 function useApi(initialCity) {
   const [lives, setLives] = useState([]);
@@ -38,48 +45,51 @@ function useApi(initialCity) {
 
 function Weather(props) {
   const [{ lives }, doFetch] = useApi(props.initialCity);
-  let temperature = "";
-  let city = "";
-  let weather = "";
-  let icon = "";
-  const isLoading = lives.length === 0;
-  if (!isLoading) {
-    temperature = lives[0].temperature;
-    city = lives[0].city;
-    weather = lives[0].weather;
-    if (city.endsWith("市")) city = city.slice(0, -1);
-    const matched = weather.match(/.*([晴阴云雨雪]).*/);
-    if (matched && matched[1]) {
-      icon = icons[matched[1]];
-    } else {
-      icon = icons["晴"];
-    }
-  }
-
   const handleClick = () => {
     doFetch(props.initialCity);
   };
+  const isLoading = lives.length === 0;
+  let style = {};
+  if (isLoading) {
+    return (
+      <div className="container">
+        <div
+          className="block weather-block"
+          onClick={handleClick}
+          style={style}
+        ></div>
+      </div>
+    );
+  }
+
+  const weather = lives[0].weather;
+  const temperature = lives[0].temperature;
+  let city = lives[0].city;
+  if (city.endsWith("市")) city = city.slice(0, -1);
+  const matched = weather.match(/.*([晴阴云雨雪]).*/);
+  let wkey;
+  if (matched && matched[1]) {
+    wkey = matched[1];
+  } else {
+    wkey = "晴";
+  }
+  const icon = icons[wkey];
+  style = { backgroundColor: bgColors[wkey] };
   return (
     <div className="container">
-      <div className="block weather-block" onClick={handleClick}>
-        {isLoading ? (
-          "加载中…"
-        ) : (
-          <>
-            <span className="weather-icon">{icon}</span>
-            <span className="weather-textinfo">
-              <span className="weather-temperature">
-                {temperature}
-                <sup>℃</sup>
-              </span>
-              <br />
-              {weather}
-              <br />
-              {/* <span className="weather-location-icon">➤</span> */}
-              {city}
-            </span>
-          </>
-        )}
+      <div className="block weather-block" onClick={handleClick} style={style}>
+        <span className="weather-icon">{icon}</span>
+        <span className="weather-textinfo">
+          <span className="weather-temperature">
+            {temperature}
+            <sup>℃</sup>
+          </span>
+          <br />
+          {weather}
+          <br />
+          {/* <span className="weather-location-icon">➤</span> */}
+          {city}
+        </span>
       </div>
     </div>
   );
