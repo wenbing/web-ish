@@ -66,7 +66,6 @@ if (mode === "production") {
 }
 const client = {
   mode,
-  devtool: "eval-source-map",
   entry,
   output,
   module: { rules: jsRule.concat(cssRule).concat(assetRule) },
@@ -87,6 +86,7 @@ const client = {
   stats: { logging: "info" },
 };
 if (mode === "development") {
+  client.devtool = "eval-source-map";
   client.devServer = {
     hot: true,
     port: 3000,
