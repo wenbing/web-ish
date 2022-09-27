@@ -48,27 +48,25 @@ export async function createDoc(opts) {
     fs.readFileSync(path.join(serverDir, "stats.json")).toString()
   );
   const { publicPath } = stats;
-  const initialData = {};
   const route = match(pathname);
+  const initialData = {
+    route: {
+      pathname: route.pathname,
+      destination: route.destination,
+    },
+  };
   let Component;
-  let appData;
   if (route.destination) {
     Component = await route.component;
-    if (typeof Component.getInitialData === "function") {
-      appData = await Component.getInitialData();
-    }
-    initialData.route = {
-      pathname: route.pathname,
-      destination: route.destination,
-    };
-    initialData[route.name] = appData;
   } else {
     Component = App;
-    appData = {};
-    initialData.route = {
-      pathname: route.pathname,
-      destination: route.destination,
-    };
+  }
+  let appData = {};
+  if (typeof Component.getInitialData === "function") {
+    appData = await Component.getInitialData();
+  }
+  if (route.destination) {
+    initialData[route.name] = appData;
   }
   const app = <Component route={initialData.route} {...appData} />;
   const content = await new Promise((resolve, reject) => {

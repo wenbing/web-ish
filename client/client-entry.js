@@ -17,7 +17,11 @@ console.log(INITIAL_DATA);
   async function initApp() {
     const route = match(`${pagesPublicPath}${INITIAL_DATA.route.pathname}`);
     const Component = route.destination ? await route.component : App;
-    const data = route.destination ? INITIAL_DATA[route.name] : {};
+    let data;
+    if (route.destination) data = INITIAL_DATA[route.name];
+    else if (typeof Component.getInitialData === "function") {
+      data = await Component.getInitialData();
+    }
     const appProps = {
       render: handleRender,
       route: INITIAL_DATA.route,
@@ -29,20 +33,17 @@ console.log(INITIAL_DATA);
   async function createApp(pathname) {
     const route = match(pathname);
     let Component;
-    let appProps = { render: handleRender };
+    let appProps = {
+      render: handleRender,
+      route: { pathname: route.pathname, destination: route.destination },
+    };
     if (route.destination) {
       Component = await route.component;
-      Object.assign(appProps, {
-        route: { pathname: route.pathname, destination: route.destination },
-      });
-      if (typeof Component.getInitialData === "function") {
-        Object.assign(appProps, await Component.getInitialData());
-      }
     } else {
       Component = App;
-      Object.assign(appProps, {
-        route: { pathname: route.pathname, destination: route.destination },
-      });
+    }
+    if (typeof Component.getInitialData === "function") {
+      Object.assign(appProps, await Component.getInitialData());
     }
     return <Component {...appProps} />;
   }

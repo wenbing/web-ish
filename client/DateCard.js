@@ -15,8 +15,16 @@ function DateCard(props) {
     const d = new Date(date).toUTCString();
     const parts = d.split(" ");
     time = parts[parts.length - 2];
+    time = time
+      .split(":")
+      .map((item, index) => {
+        if (index === 0)
+          return ((parseInt(item) + 8) % 24).toString().padStart(2, "0");
+        return item;
+      })
+      .join(":");
   } else {
-    time = "00:00:00";
+    time = "08:00:00";
   }
   return (
     <div className="container">
