@@ -37,10 +37,11 @@ const setupMiddlewares = (middlewares, devServer) => {
   const middleware = async (req, res, next) => {
     const pathname = req.url;
     const extname = path.extname(pathname);
+
     const isDoc =
       req.headers.accept &&
       req.headers.accept.indexOf("text/html") !== -1 &&
-      extname === "";
+      (extname === "" || extname === ".html");
     if (!isDoc) {
       return next();
     }

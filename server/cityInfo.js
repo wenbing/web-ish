@@ -3527,30 +3527,39 @@ let cities = `北京市	110000	010
 路凼填海区	820007	1853
 圣方济各堂区	820008	1853`;
 
-cities = cities.split("\n");
-cities = cities.filter((item) => item.indexOf("市辖区") === -1);
-const byCityFirstLetter = {};
-for (let i = 65; i <= 90; i++) {
-  let ch = String.fromCharCode(i).toLowerCase();
-  byCityFirstLetter[ch] = [];
-}
-cities = cities.reduce(
-  (acc, item) => {
-    const { byCityCode, byCityFirstLetter } = acc;
-    const [name, adcode, citycode] = item.split("\t");
-    if (byCityCode[citycode] === undefined) {
-      const counties = [];
-      const first_letter = pinyin(name, { style: "first_letter" })[0][0];
-      const city = { name, first_letter, adcode, citycode, counties };
-      byCityCode[citycode] = city;
-      byCityFirstLetter[first_letter].push(city);
-    } else {
-      byCityCode[citycode].counties.push({ name, adcode });
-    }
-    return acc;
-  },
-  { byCityCode: {}, byCityFirstLetter }
-);
+function writeCities() {
+  cities = cities.split("\n");
+  cities = cities.filter((item) => item.indexOf("市辖区") === -1);
+  const byCityFirstLetter = {};
+  for (let i = 65; i <= 90; i++) {
+    let ch = String.fromCharCode(i).toLowerCase();
+    byCityFirstLetter[ch] = [];
+  }
+  cities = cities.reduce(
+    (acc, item) => {
+      const { byCityCode, byCityFirstLetter } = acc;
+      const [name, adcode, citycode] = item.split("\t");
+      if (byCityCode[citycode] === undefined) {
+        const counties = [];
+        const first_letter = pinyin(name, { style: "first_letter" })[0][0];
+        const city = { name, first_letter, adcode, citycode, counties };
+        byCityCode[citycode] = city;
+        byCityFirstLetter[first_letter].push(city);
+      } else {
+        byCityCode[citycode].counties.push({ name, adcode });
+      }
+      return acc;
+    },
+    { byCityCode: {}, byCityFirstLetter }
+  );
 
-cities = JSON.stringify(cities.byCityFirstLetter, null, 2);
-fs.writeFileSync(path.join(publicDir, "cities.json"), cities);
+  cities = JSON.stringify(cities.byCityFirstLetter, null, 2);
+  fs.writeFileSync(path.join(publicDir, "cities.json"), cities);
+  console.log(`fs.write public/cities.json success.`);
+}
+
+module.exports = writeCities;
+
+if (require.main === module) {
+  writeCities();
+}

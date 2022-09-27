@@ -4,6 +4,7 @@ import { Writable } from "stream";
 import React from "react";
 import { renderToPipeableStream } from "react-dom/server";
 
+import { match } from "./routes";
 import App from "./App";
 
 export async function createError(opts) {
@@ -18,7 +19,9 @@ export async function createError(opts) {
     publicPath,
     fileSystem: opts.fs || fs,
   });
-  const initialData = { pathname };
+  const route = match(pathname);
+  const destination = route ? route.destination : null;
+  const initialData = { route: { pathname, destination } };
   const title = "Error!";
   const doc = `<!doctype html>
 <html>
@@ -44,8 +47,23 @@ export async function createDoc(opts) {
     fs.readFileSync(path.join(serverDir, "stats.json")).toString()
   );
   const { publicPath } = stats;
-  const initialData = { pathname, ...App.getInitialData() };
-  const app = <App {...initialData} />;
+  const initialData = {};
+  const route = match(pathname);
+  let Component;
+  let appData;
+  if (route) {
+    Component = await route.component;
+    if (typeof Component.getInitialData === "function") {
+      appData = await Component.getInitialData();
+    }
+    initialData.route = { pathname, destination: route.destination };
+    initialData[route.name] = appData;
+  } else {
+    Component = App;
+    appData = {};
+    initialData.route = { pathname, destination: null };
+  }
+  const app = <Component {...appData} />;
   const content = await new Promise((resolve, reject) => {
     let body = "";
     const writable = new Writable({
@@ -65,8 +83,20 @@ export async function createDoc(opts) {
       },
     });
   });
+  const clientStats = stats.entrypoints.client;
+  let clientAssets = clientStats.assets;
+  // route.name webpackChunkName webpackPreload 相符合，可以加载到html中
+  if (route && clientStats.children.preload) {
+    const preloadByName = clientStats.children.preload.reduce(
+      (acc, item) => Object.assign(acc, { [item.name]: item }),
+      {}
+    );
+    if (preloadByName[route.name]) {
+      clientAssets = clientAssets.concat(preloadByName[route.name].assets);
+    }
+  }
   const assets = getAssets({
-    assets: stats.entrypoints.client.assets,
+    assets: clientAssets,
     publicDir,
     publicPath,
     fileSystem: opts.fs || fs,
@@ -79,12 +109,12 @@ export async function createDoc(opts) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${title}</title>
-    ${assets.header.join("\n\t\t")}
+    ${assets.header.join("\n\t")}
   </head>
   <body>
     <div id="app">${content}</div>
     <script>window.INITIAL_DATA = ${JSON.stringify(initialData)}</script>
-    ${assets.body.join("\n\t\t")}
+    ${assets.body.join("\n\t")}
   </body>
 </html>
     `;

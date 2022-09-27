@@ -5,7 +5,13 @@ class StatsWriterPlugin {
   constructor({ outputPath }) {
     this.opts = {
       filename: "stats.json",
-      stats: { preset: "none", publicPath: true, entrypoints: true },
+      stats: {
+        preset: "none",
+        publicPath: true,
+        entrypoints: true,
+        chunkGroupAuxiliary: true,
+        chunkGroupChildren: true,
+      },
     };
     const filepath = path.resolve(outputPath, this.opts.filename);
     // if (fs.existsSync(filepath)) fs.rmSync(filepath)

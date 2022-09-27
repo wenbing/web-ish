@@ -15,7 +15,7 @@ const jsRule = [
       options: {
         presets: [
           ["@babel/preset-env", { targets: "node 16.16" }],
-          "@babel/preset-react",
+          ["@babel/preset-react", { runtime: "automatic" }],
           ["@babel/preset-typescript", { allExtensions: true, isTSX: true }],
         ],
       },
