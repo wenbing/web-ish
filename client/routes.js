@@ -4,7 +4,7 @@ const Setting = import(
   /* webpackPreload:true, webpackChunkName: 'setting' */ "./Setting"
 ).then((m) => m.default);
 
-export const publicPath = "/web-ish";
+export const pagesPublicPath = require("./pagesPublicPath");
 
 export const routes = [
   {
@@ -22,7 +22,7 @@ export const routes = [
 ];
 
 export function match(pathname) {
-  const striped = pathname.slice(publicPath.length);
+  const striped = pathname.slice(pagesPublicPath.length);
   const len = routes.length;
   for (let i = 0; i < len; i++) {
     const route = routes[i];

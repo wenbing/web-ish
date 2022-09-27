@@ -4,7 +4,7 @@ import ReactDOM, { createRoot } from "react-dom/client";
 
 import App from "./App";
 import * as css from "./main.css";
-import { match, publicPath } from "./routes";
+import { match, pagesPublicPath } from "./routes";
 
 if (process.env.NODE_ENV === "development") {
   import("./tape-test");
@@ -15,7 +15,7 @@ console.log(INITIAL_DATA);
 
 (async function main() {
   async function initApp() {
-    const route = match(`${publicPath}${INITIAL_DATA.route.pathname}`);
+    const route = match(`${pagesPublicPath}${INITIAL_DATA.route.pathname}`);
     const Component = route.destination ? await route.component : App;
     const data = route.destination ? INITIAL_DATA[route.name] : {};
     const appProps = {

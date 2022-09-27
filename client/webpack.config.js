@@ -9,6 +9,7 @@ const mode =
 const cwd = process.cwd();
 const publicDir = path.join(__dirname, "../public");
 const serverDir = path.join(__dirname, "../server/lib");
+const pagesPublicPath = require("./pagesPublicPath");
 
 const jsRule = [
   {
@@ -47,8 +48,8 @@ const output = {
   path: publicDir,
   publicPath:
     process.env.GITHUB_PAGES === "true"
-      ? "https://wenbing.github.io/web-ish/"
-      : "/web-ish/",
+      ? `https://wenbing.github.io${pagesPublicPath}/`
+      : `${pagesPublicPath}/`,
   filename: "[name].js",
   chunkFilename: "[name].js",
 };
@@ -90,8 +91,8 @@ if (mode === "development") {
     hot: true,
     port: 3000,
     setupMiddlewares,
-    static: { directory: publicDir, publicPath: "/web-ish" },
-    devMiddleware: { publicPath: "/web-ish" },
+    static: { directory: publicDir, publicPath: pagesPublicPath },
+    devMiddleware: { publicPath: pagesPublicPath },
   };
 } else if (mode === "production") {
   client.optimization = {
