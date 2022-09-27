@@ -63,7 +63,7 @@ export async function createDoc(opts) {
     appData = {};
     initialData.route = { pathname, destination: null };
   }
-  const app = <Component {...appData} />;
+  const app = <Component route={initialData.route} {...appData} />;
   const content = await new Promise((resolve, reject) => {
     let body = "";
     const writable = new Writable({

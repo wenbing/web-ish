@@ -1,7 +1,9 @@
 import React, { Suspense } from "react";
+import Nav from "./Nav";
 import DateCard from "./DateCard";
 import Weather from "./Weather";
 import "./App.css";
+import defaultCities from "./defaultCities";
 
 const themes = {
   light: {
@@ -21,12 +23,12 @@ const AsyncCompnent = React.lazy(() =>
 function App(props) {
   return (
     <>
+      <Nav render={props.render} route={props.route}></Nav>
       <DateCard date={props.date}></DateCard>
 
-      <Weather initialCity="110000"></Weather>
-      <Weather initialCity="310000"></Weather>
-      <Weather initialCity="500000"></Weather>
-      <Weather initialCity="341881"></Weather>
+      {props.adcodes.map((adcode) => (
+        <Weather key={adcode} initialCity={adcode}></Weather>
+      ))}
 
       <ThemeContext.Provider value={themes.dark}>
         <Suspense fallback={<div>Loading...</div>}>
@@ -38,7 +40,7 @@ function App(props) {
 }
 
 App.getInitialData = () => {
-  return { date: Date.now() };
+  return { date: Date.now(), adcodes: defaultCities };
 };
 
 App.ThemeContext = ThemeContext;

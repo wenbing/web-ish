@@ -2,8 +2,34 @@
   font-family: "LcdD";
   src: url("./LcdD.ttf");
 }
+html,
 body {
   margin: 0;
+}
+
+ul.nav {
+  display: flex;
+  background-color: azure;
+  margin: 0;
+  padding-left: 0;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  list-style: none;
+}
+
+.nav li {
+  flex: auto;
+  max-width: 80px;
+}
+.nav li > a,
+.nav li > a:visited,
+.nav li > a:active {
+  text-decoration: none;
+}
+
+.nav li > a:hover,
+.nav li > a.nav-item-current {
+  text-decoration: underline;
 }
 
 .container {
@@ -11,6 +37,17 @@ body {
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  background-color: white;
+}
+
+.setting-header {
+  margin: 0;
+  padding: 10px 0;
+  background-color: white;
+}
+
+.setting {
+  padding-bottom: 1rem;
   background-color: white;
 }
 

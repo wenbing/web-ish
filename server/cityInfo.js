@@ -3554,7 +3554,14 @@ function writeCities() {
   );
 
   cities = JSON.stringify(cities.byCityFirstLetter, null, 2);
-  fs.writeFileSync(path.join(publicDir, "cities.json"), cities);
+
+  const filepath = path.join(publicDir, "cities.json");
+  try {
+    fs.mkdirSync(path.dirname(filepath));
+  } catch (ex) {
+    if (ex.code !== "EEXIST") throw ex;
+  }
+  fs.writeFileSync(filepath, cities);
   console.log(`fs.write public/cities.json success.`);
 }
 

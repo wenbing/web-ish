@@ -10,9 +10,14 @@ function DateCard(props) {
       clearInterval(intervalID);
     };
   });
-  const d = new Date(date).toUTCString();
-  const parts = d.split(" ");
-  const time = parts[parts.length - 2];
+  let time;
+  if (date) {
+    const d = new Date(date).toUTCString();
+    const parts = d.split(" ");
+    time = parts[parts.length - 2];
+  } else {
+    time = "00:00:00";
+  }
   return (
     <div className="container">
       <h2 className="block time-block">

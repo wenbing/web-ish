@@ -1,5 +1,4 @@
 import React from "react";
-import App from "./App";
 
 const Setting = import(
   /* webpackPreload:true, webpackChunkName: 'setting' */ "./Setting"
@@ -10,7 +9,7 @@ export const routes = [
     name: "app",
     source: /^\/(?:index(?:\.html)?)?(?:\/)?$/i,
     destination: "/index.html",
-    component: App,
+    component: import("./App").then((m) => m.default),
   },
   {
     name: "setting",
