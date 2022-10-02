@@ -16,7 +16,7 @@ async function writeDoc({ pathname }) {
     doc = await createDoc({
       serverDir,
       publicDir,
-      pathname: `${pagesPublicPath}${pathname}`,
+      url: `${pagesPublicPath}${pathname}`,
     });
   } catch (ex) {
     console.error("writeDoc met", ex.stack);
