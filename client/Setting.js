@@ -8,6 +8,7 @@ function useCity(initials) {
   const [cities, setCities] = useState([]);
   const [citiesByPinyin, setCitiesByPinyin] = useState({});
   const [citiesByAdCode, setCitiesByAdCode] = useState({});
+  const [citiesByName, setCitiesByName] = useState({});
   const [selected, setSelected] = useState(initials.selected);
   const [isSearching, setIsSearching] = useState(() =>
     new URLSearchParams(initials.route.search).has("select-cities")
@@ -25,9 +26,11 @@ function useCity(initials) {
       );
       const citiesByPinyin = getCitiesBy("pinyin", cities, {});
       const citiesByAdCode = getCitiesBy("adcode", cities, {});
+      const citiesByName = getCitiesBy("name", cities, {});
       setCities(cities);
       setCitiesByPinyin(citiesByPinyin);
       setCitiesByAdCode(citiesByAdCode);
+      setCitiesByName(citiesByName);
     })();
   }, []);
 
@@ -74,11 +77,15 @@ function useCity(initials) {
   const state = {
     cities,
     citiesByPinyin,
+    citiesByName,
     selected: isLoading
       ? []
       : selected.map((adcode) => ({
           adcode,
-          name: citiesByAdCode[adcode].name,
+          name: ((item) =>
+            item.prefecture
+              ? `${item.prefecture.name}/${item.name}`
+              : item.name)(citiesByAdCode[adcode]),
         })),
     keyword,
     deferedKeyword,
@@ -93,19 +100,22 @@ function getCitiesBy(name, items, init) {
   return items.reduce((acc, item) => {
     Object.assign(acc, { [item[name]]: item });
     if (item.counties) {
+      item.counties.forEach((county) => (county.prefecture = item));
       return getCitiesBy(name, item.counties, acc);
     }
     return acc;
   }, init);
 }
 
-function filterCitiesByKeyword(citiesByPinyin, keyword) {
+function filterCitiesByKeyword(citiesByPinyin, citiesByName, keyword) {
   if (keyword === "") {
     return [];
   }
-  return Object.keys(citiesByPinyin).reduce((acc, name) => {
-    if (name.startsWith(keyword)) {
-      return acc.concat(citiesByPinyin[name]);
+  const isPY = keyword.match(/[a-z]+/gi);
+  const data = isPY !== null ? citiesByPinyin : citiesByName;
+  return Object.keys(data).reduce((acc, key) => {
+    if (key.indexOf(keyword) !== -1) {
+      return acc.concat(data[key]);
     }
     return acc;
   }, []);
@@ -133,6 +143,7 @@ function Setting(props) {
   const [
     {
       citiesByPinyin,
+      citiesByName,
       selected,
       isLoading,
       isSearching,
@@ -144,7 +155,11 @@ function Setting(props) {
   const suggestCities = useMemo(
     () => (
       <CityList
-        cities={filterCitiesByKeyword(citiesByPinyin, deferedKeyword)}
+        cities={filterCitiesByKeyword(
+          citiesByPinyin,
+          citiesByName,
+          deferedKeyword
+        )}
         selectCity={selectCity}
       ></CityList>
     ),

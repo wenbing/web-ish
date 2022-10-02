@@ -75,11 +75,13 @@ function Weather(props) {
   }
   const icon = icons[wkey];
   style = { backgroundColor: bgColors[wkey] };
+  const infoStyle = {};
+  if (city.length > 6) infoStyle.lineHeight = "1rem";
   return (
     <div className="container">
       <div className="block weather-block" onClick={handleClick} style={style}>
         <span className="weather-icon">{icon}</span>
-        <span className="weather-textinfo">
+        <span className="weather-textinfo" style={infoStyle}>
           <span className="weather-temperature">
             {temperature}
             <sup>℃</sup>

@@ -27,6 +27,7 @@
   border: 1px solid skyblue;
   padding: 5px;
   font-size: large;
+  width: 300px;
 }
 .setting-city input:focus-visible {
   outline: 1px solid skyblue;
@@ -40,6 +41,10 @@
 .setting-city ul li {
   padding-bottom: 0.5rem;
 }
+.setting-city ul li:hover {
+  text-decoration: underline;
+  cursor: default;
+}
 
 .setting-city-select {
   min-width: 50px;
@@ -48,4 +53,5 @@
 
 .setting-city-list span {
   padding-right: 0.5rem;
+  display: inline-block;
 }
