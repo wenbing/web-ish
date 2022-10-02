@@ -14,14 +14,19 @@ export const routes = [
     source: /^\/setting(?:\.html)?(?:\/)?$/i,
     destination: "/setting.html",
     component: import(
-      /* webpackPreload:true, webpackChunkName: 'setting' */ "./Setting"
+      /* webpackPrefetch:true, webpackChunkName: 'setting' */ "./Setting"
     ).then((m) => m.default),
   },
 ];
 
-export function match(pathname) {
+export function match(url) {
+  const searchPosition = url.indexOf("?");
+  const [pathname, search] =
+    searchPosition === -1
+      ? [url, ""]
+      : [url.slice(0, searchPosition), url.slice(searchPosition)];
   if (!pathname.startsWith(pagesPublicPath)) {
-    return { pathname, destination: null };
+    return { pathname, search, destination: null };
   }
   const striped = pathname.slice(pagesPublicPath.length);
   const len = routes.length;
@@ -29,8 +34,8 @@ export function match(pathname) {
     const route = routes[i];
     const matched = striped.match(route.source);
     if (matched) {
-      return Object.assign({}, route, { pathname: striped });
+      return Object.assign({}, route, { pathname: striped, search });
     }
   }
-  return { pathname: striped, destination: null };
+  return { pathname: striped, search, destination: null };
 }

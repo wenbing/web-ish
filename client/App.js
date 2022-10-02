@@ -1,9 +1,9 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Nav from "./Nav";
 import DateCard from "./DateCard";
 import Weather from "./Weather";
 import "./App.css";
-import defaultCities from "./defaultCities";
+import defaultCities, { STORAGE_KEY_CITIES } from "./defaultCities";
 
 const themes = {
   light: {
@@ -21,12 +21,17 @@ const AsyncCompnent = React.lazy(() =>
 );
 
 function App(props) {
+  const [adcodes, setAdcodes] = useState(props.adcodes);
+  useEffect(() => {
+    const data = localStorage.getItem(STORAGE_KEY_CITIES);
+    setAdcodes(JSON.parse(data));
+  }, []);
   return (
     <>
       <Nav render={props.render} route={props.route}></Nav>
       <DateCard date={props.date}></DateCard>
 
-      {props.adcodes.map((adcode) => (
+      {adcodes.map((adcode) => (
         <Weather key={adcode} initialCity={adcode}></Weather>
       ))}
 

@@ -1,0 +1,51 @@
+.setting-header {
+  margin: 0;
+  padding: 10px 0;
+  background-color: white;
+}
+
+.setting {
+  padding-bottom: 1rem;
+  background-color: white;
+}
+
+.setting-city p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.setting-city select {
+  min-width: 300px;
+  min-height: 500px;
+  background-color: azure;
+  border-color: #ebebeb;
+  border-width: 1px;
+}
+
+.setting-city input {
+  border: 1px solid skyblue;
+  padding: 5px;
+  font-size: large;
+}
+.setting-city input:focus-visible {
+  outline: 1px solid skyblue;
+}
+
+.setting-city ul {
+  padding-left: 0;
+  list-style: none;
+}
+
+.setting-city ul li {
+  padding-bottom: 0.5rem;
+}
+
+.setting-city-select {
+  min-width: 50px;
+  text-align: right;
+}
+
+.setting-city-list span {
+  padding-right: 0.5rem;
+}

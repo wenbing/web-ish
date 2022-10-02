@@ -15,7 +15,9 @@ console.log(INITIAL_DATA);
 
 (async function main() {
   async function initApp() {
-    const route = match(`${pagesPublicPath}${INITIAL_DATA.route.pathname}`);
+    const route = match(
+      `${pagesPublicPath}${INITIAL_DATA.route.pathname}${INITIAL_DATA.route.search}`
+    );
     const Component = route.destination ? await route.component : App;
     let data;
     if (route.destination) data = INITIAL_DATA[route.name];
@@ -30,12 +32,16 @@ console.log(INITIAL_DATA);
     return <Component {...appProps} />;
   }
 
-  async function createApp(pathname) {
-    const route = match(pathname);
+  async function createApp({ pathname, search }) {
+    const route = match(`${pathname}${search}`);
     let Component;
     let appProps = {
       render: handleRender,
-      route: { pathname: route.pathname, destination: route.destination },
+      route: {
+        pathname: route.pathname,
+        search: route.search,
+        destination: route.destination,
+      },
     };
     if (route.destination) {
       Component = await route.component;
@@ -57,7 +63,7 @@ console.log(INITIAL_DATA);
   }
 
   window.addEventListener("popstate", async (event) => {
-    const pathname = event.target.location.pathname;
-    await handleRender(pathname);
+    const location = event.target.location;
+    await handleRender(location);
   });
 })();

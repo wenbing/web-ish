@@ -65,7 +65,7 @@ function Weather(props) {
   const weather = lives[0].weather;
   const temperature = lives[0].temperature;
   let city = lives[0].city;
-  if (city.endsWith("市")) city = city.slice(0, -1);
+  // if (city.endsWith("市")) city = city.slice(0, -1);
   const matched = weather.match(/.*([晴阴云雨雪]).*/);
   let wkey;
   if (matched && matched[1]) {

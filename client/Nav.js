@@ -8,11 +8,14 @@ function Nav(props) {
       return;
     }
     evt.preventDefault();
-    const { pathname } = new URL(evt.target.href);
-    const route = match(pathname);
-    const shouldReplace = route && route.destination === destination;
-    history[shouldReplace ? "replaceState" : "pushState"]({}, "", pathname);
-    props.render(pathname);
+    const loc = new URL(evt.target.href);
+    const route = match(`${loc.pathname}${loc.search}`);
+    const shouldReplace =
+      route &&
+      route.destination === props.route.destination &&
+      route.search === props.route.search;
+    history[shouldReplace ? "replaceState" : "pushState"]({}, "", loc.pathname);
+    props.render(loc);
   };
 
   return (

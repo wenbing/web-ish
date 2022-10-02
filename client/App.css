@@ -40,17 +40,6 @@ ul.nav {
   background-color: white;
 }
 
-.setting-header {
-  margin: 0;
-  padding: 10px 0;
-  background-color: white;
-}
-
-.setting {
-  padding-bottom: 1rem;
-  background-color: white;
-}
-
 .block {
   flex: auto;
   max-width: 200px;

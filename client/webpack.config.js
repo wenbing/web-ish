@@ -106,7 +106,7 @@ if (mode === "development") {
         },
       },
     },
-    minimizer: [new CssMinimizerPlugin()],
+    minimizer: ["...", new CssMinimizerPlugin()],
   };
 }
 

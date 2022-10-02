@@ -35,7 +35,10 @@ const setupMiddlewares = (middlewares, devServer) => {
   });
 
   const middleware = async (req, res, next) => {
-    const pathname = req.url;
+    const pathname =
+      req.url.indexOf("?") === -1
+        ? req.url
+        : req.url.slice(0, req.url.indexOf("?"));
     const extname = path.extname(pathname);
     const isDoc =
       req.headers.accept &&
@@ -48,7 +51,7 @@ const setupMiddlewares = (middlewares, devServer) => {
     const renderPath = require.resolve(`${serverDir}/render`);
     clearRequireCache(renderPath);
     const { createDoc, createError } = require(renderPath);
-    const opts = { serverDir, publicDir, pathname, fs: outputFileSystem };
+    const opts = { serverDir, publicDir, url: req.url, fs: outputFileSystem };
     try {
       const doc = await createDoc(opts);
       res.end(doc);

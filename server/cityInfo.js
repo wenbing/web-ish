@@ -3527,6 +3527,69 @@ let cities = `北京市	110000	010
 路凼填海区	820007	1853
 圣方济各堂区	820008	1853`;
 
+function nameToPinyin(name) {
+  let replaced = {
+    县: "xian",
+    区: "qu",
+    地: "di",
+    家: "jia",
+    都: "du",
+    和: "he",
+    南: "nan",
+    阿: "a",
+    景: "jing",
+    大: "da",
+    繁: "fan",
+    扎: "zha",
+    省: "sheng",
+    齐: "qi",
+    伯: "bo",
+    盖: "gai",
+    宁: "ning",
+    泽: "ze",
+    甸: "dian",
+    广: "guang",
+    氏: "shi",
+    枝: "zhi",
+    若: "ruo",
+    合: "he",
+    红: "hong",
+    车: "che",
+    重: "chong",
+  };
+  const reg = new RegExp(`(?:${Object.keys(replaced).join("|")})`, "g");
+  const n = name.replace(reg, function (matched, index, string) {
+    return replaced[matched];
+  });
+  let full;
+  full = pinyin(n, {
+    style: "tone2",
+    heteronym: true,
+    segment: true,
+    group: true,
+  });
+  full = full
+    .map((i) => i.map((j) => j.replace(/\d+/g, ""))) // 去除音调
+    .map((i) =>
+      i.slice(1).reduce(
+        ([a], j) => {
+          if (a === j) return [a];
+          return [].concat(a).concat(j);
+        },
+        [i[0]]
+      )
+    );
+  const hasMultipleHeteronym = full.filter((i) => i.length > 1).length > 1;
+  if (hasMultipleHeteronym) throw new Error("There are multiple heteronym");
+  full = full.slice(1).reduce((acc, item) => {
+    if (item.length > 1) {
+      return item.map((i) => acc[0] + i);
+    }
+    return acc.map((i) => i + item);
+  }, full[0]);
+  return full;
+}
+
 function writeCities() {
   cities = cities.split("\n");
   cities = cities.filter((item) => item.indexOf("市辖区") === -1);
@@ -3542,11 +3605,23 @@ function writeCities() {
       if (byCityCode[citycode] === undefined) {
         const counties = [];
         const first_letter = pinyin(name, { style: "first_letter" })[0][0];
-        const city = { name, first_letter, adcode, citycode, counties };
+        const py = nameToPinyin(name);
+        const city = {
+          name,
+          first_letter,
+          pinyin: py,
+          adcode,
+          citycode,
+          counties,
+        };
         byCityCode[citycode] = city;
         byCityFirstLetter[first_letter].push(city);
       } else {
-        byCityCode[citycode].counties.push({ name, adcode });
+        byCityCode[citycode].counties.push({
+          name,
+          adcode,
+          pinyin: nameToPinyin(name),
+        });
       }
       return acc;
     },

@@ -8,7 +8,7 @@ import { match } from "./routes";
 import App from "./App";
 
 export async function createError(opts) {
-  const { error, serverDir, publicDir, pathname } = opts;
+  const { error, serverDir, publicDir, url } = opts;
   const stats = JSON.parse(
     fs.readFileSync(path.join(serverDir, "stats.json")).toString()
   );
@@ -19,9 +19,13 @@ export async function createError(opts) {
     publicPath,
     fileSystem: opts.fs || fs,
   });
-  const route = match(pathname);
+  const route = match(url);
   const initialData = {
-    route: { pathname: route.pathname, destination: route.destination },
+    route: {
+      pathname: route.pathname,
+      search: route.search,
+      destination: route.destination,
+    },
   };
   const title = "Error!";
   const doc = `<!doctype html>
@@ -43,16 +47,17 @@ export async function createError(opts) {
 }
 
 export async function createDoc(opts) {
-  const { serverDir, publicDir, pathname } = opts;
+  const { serverDir, publicDir, url } = opts;
   const stats = JSON.parse(
     fs.readFileSync(path.join(serverDir, "stats.json")).toString()
   );
   const { publicPath } = stats;
-  const route = match(pathname);
+  const route = match(url);
   const initialData = {
     route: {
       pathname: route.pathname,
       destination: route.destination,
+      search: route.search,
     },
   };
   let Component;
@@ -90,14 +95,14 @@ export async function createDoc(opts) {
   });
   const clientStats = stats.entrypoints.client;
   let clientAssets = clientStats.assets;
-  // route.name webpackChunkName webpackPreload 相符合，可以加载到html中
-  if (route && clientStats.children.preload) {
-    const preloadByName = clientStats.children.preload.reduce(
+  // route.name webpackChunkName webpackPrefetch 相符合，可以加载到html中
+  if (route && clientStats.children.prefetch) {
+    const prefetchByName = clientStats.children.prefetch.reduce(
       (acc, item) => Object.assign(acc, { [item.name]: item }),
       {}
     );
-    if (preloadByName[route.name]) {
-      clientAssets = clientAssets.concat(preloadByName[route.name].assets);
+    if (prefetchByName[route.name]) {
+      clientAssets = clientAssets.concat(prefetchByName[route.name].assets);
     }
   }
   const assets = getAssets({
