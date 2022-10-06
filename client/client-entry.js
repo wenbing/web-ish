@@ -11,17 +11,20 @@ if (process.env.NODE_ENV === "development") {
 }
 
 const INITIAL_DATA = window.INITIAL_DATA;
-console.log(INITIAL_DATA);
 
 (async function main() {
   async function initApp() {
     const route = match(
       `${pagesPublicPath}${INITIAL_DATA.route.pathname}${INITIAL_DATA.route.search}`
     );
-    const Component = route.destination ? await route.component : App;
+    let Component;
     let data;
-    if (route.destination) data = INITIAL_DATA[route.name];
-    else if (typeof Component.getInitialData === "function") {
+    if (route.destination) {
+      Component = await route.component;
+      data = INITIAL_DATA[route.name];
+    } else {
+      Component = App;
+      // if (typeof Component.getInitialData === "function") {}
       data = await Component.getInitialData();
     }
     const appProps = {
@@ -29,6 +32,7 @@ console.log(INITIAL_DATA);
       route: INITIAL_DATA.route,
       ...data,
     };
+    console.log("init appProps", appProps);
     return <Component {...appProps} />;
   }
 
@@ -43,14 +47,25 @@ console.log(INITIAL_DATA);
         destination: route.destination,
       },
     };
+    let appName;
     if (route.destination) {
       Component = await route.component;
+      appName = route.name;
     } else {
       Component = App;
+      appName = "app";
     }
+
     if (typeof Component.getInitialData === "function") {
-      Object.assign(appProps, await Component.getInitialData());
+      let data;
+      try {
+        data = await Component.getInitialData();
+      } catch (ex) {
+        console.error(ex);
+      }
+      Object.assign(appProps, INITIAL_DATA[appName], data);
     }
+    console.log("render appProps", appProps);
     return <Component {...appProps} />;
   }
 

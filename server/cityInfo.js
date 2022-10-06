@@ -3,7 +3,7 @@ const path = require("path");
 const pinyin = require("pinyin").default;
 const publicDir = path.join(__dirname, "../public");
 
-let cities = `北京市	110000	010
+const citiesTable = `北京市	110000	010
 北京市市辖区	110100	010
 东城区	110101	010
 西城区	110102	010
@@ -3590,7 +3590,7 @@ function nameToPinyin(name) {
   return full;
 }
 
-function writeCities() {
+function normalizedCities(cities = citiesTable) {
   cities = cities.split("\n");
   cities = cities.filter((item) => item.indexOf("市辖区") === -1);
   const byCityFirstLetter = {};
@@ -3600,36 +3600,41 @@ function writeCities() {
   }
   cities = cities.reduce(
     (acc, item) => {
-      const { byCityCode, byCityFirstLetter } = acc;
+      const { byAdcode, byCityCode, byCityFirstLetter } = acc;
       const [name, adcode, citycode] = item.split("\t");
       if (byCityCode[citycode] === undefined) {
         const counties = [];
         const first_letter = pinyin(name, { style: "first_letter" })[0][0];
-        const py = nameToPinyin(name);
         const city = {
           name,
           first_letter,
-          pinyin: py,
+          pinyin: nameToPinyin(name),
           adcode,
           citycode,
           counties,
         };
         byCityCode[citycode] = city;
         byCityFirstLetter[first_letter].push(city);
+        byAdcode[city.adcode] = city;
       } else {
-        byCityCode[citycode].counties.push({
+        const county = {
           name,
           adcode,
           pinyin: nameToPinyin(name),
-        });
+        };
+        byCityCode[citycode].counties.push(county);
+        byAdcode[adcode] = county;
       }
       return acc;
     },
-    { byCityCode: {}, byCityFirstLetter }
+    { byAdcode: {}, byCityCode: {}, byCityFirstLetter }
   );
+  return cities;
+}
 
+function writeCities() {
+  let cities = normalizedCities(citiesTable);
   cities = JSON.stringify(cities.byCityFirstLetter, null, 2);
-
   const filepath = path.join(publicDir, "cities.json");
   try {
     fs.mkdirSync(path.dirname(filepath));
@@ -3639,6 +3644,8 @@ function writeCities() {
   fs.writeFileSync(filepath, cities);
   console.log(`fs.write public/cities.json success.`);
 }
+
+writeCities.normalizedCities = normalizedCities;
 
 module.exports = writeCities;
 

@@ -64,10 +64,12 @@ if (mode === "production") {
     chunkFilename: "[name].[contenthash].css",
   });
 }
+const target = "web";
 const client = {
   mode,
   entry,
   output,
+  target,
   module: { rules: jsRule.concat(cssRule).concat(assetRule) },
   resolve: {
     fallback: {
@@ -82,6 +84,9 @@ const client = {
     }),
     new StatsWriterPlugin({ outputPath: serverDir }),
     new MiniCssExtractPlugin(miniCssOpts),
+    new webpack.DefinePlugin({
+      "process.env.BUILD_TARGET": JSON.stringify(target),
+    }),
   ],
   stats: { logging: "info" },
 };

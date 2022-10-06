@@ -24,7 +24,7 @@ function App(props) {
   const [adcodes, setAdcodes] = useState(props.adcodes);
   useEffect(() => {
     const data = localStorage.getItem(STORAGE_KEY_CITIES);
-    setAdcodes(JSON.parse(data));
+    setAdcodes(JSON.parse(data).map(({ adcode }) => adcode));
   }, []);
   return (
     <>
