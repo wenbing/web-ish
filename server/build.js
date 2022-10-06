@@ -10,7 +10,7 @@ const serverDir = serverWebpackConfig.output.path;
 const pagesPublicPath = require("../client/pagesPublicPath");
 
 async function writeDoc({ pathname }) {
-  const { createDoc } = require("./lib/render");
+  const { createDoc } = require("../server_lib/render");
   let doc;
   try {
     doc = await createDoc({

@@ -38,7 +38,7 @@ jobs:
           node-version: "16.16"
       - name: Build Static Files And Pages
         run: |
-          rm -rf public server/lib
+          rm -rf public server_lib
           npm install
           NODE_ENV=production node server/build.js --pathname / /setting.html
       - name: Upload artifact

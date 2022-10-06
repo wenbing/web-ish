@@ -8,7 +8,7 @@ const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 const cwd = process.cwd();
 const publicDir = path.join(__dirname, "../public");
-const serverDir = path.join(__dirname, "../server/lib");
+const serverDir = path.join(__dirname, "../server_lib");
 const pagesPublicPath = require("./pagesPublicPath");
 
 const jsRule = [

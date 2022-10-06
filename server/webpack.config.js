@@ -5,7 +5,7 @@ const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 const cwd = process.cwd();
 const webDir = path.join(__dirname, "../");
-const serverDir = path.resolve(__dirname, "../server/lib");
+const serverDir = path.resolve(__dirname, "../server_lib");
 const pkg = require("../package.json");
 
 const jsRule = [
