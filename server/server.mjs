@@ -8,7 +8,7 @@ import render from "../server_lib/render.js";
 
 const publicDir = clientWebpackConfig.output.path;
 const serverDir = serverWebpackConfig.output.path;
-const { createDoc } = render;
+const { createDoc, createError } = render;
 
 async function handler(req, res) {
   if (!req.url.startsWith(pagesPublicPath)) {
