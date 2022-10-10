@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 const webpack = require("webpack");
+const cp = require("child_process");
 
-const writeCities = require("./cityInfo");
 const clientWebpackConfig = require("../client/webpack.config");
 const serverWebpackConfig = require("./webpack.config");
 const publicDir = clientWebpackConfig.output.path;
@@ -39,12 +39,13 @@ if (require.main === module) {
   //   writeDoc({ pathname });
   // });
   // return;
+
   const compiler = webpack([clientWebpackConfig, serverWebpackConfig]);
   compiler.run((err, stats) => {
     if (err) throw err;
     if (stats.hasErrors()) throw new Error(stats.toString({ colors: true }));
     console.log(stats.toString({ colors: true }));
-    writeCities();
+    cpCitiesJSON();
     const cliOpts = parseArgv();
     (cliOpts.pathname || ["/"]).forEach((pathname) => {
       writeDoc({ pathname });
@@ -69,4 +70,14 @@ function parseArgv() {
     }
   }
   return args;
+}
+
+function cpCitiesJSON() {
+  const cwd = process.cwd();
+  const cmd = `cp ${path.relative(
+    cwd,
+    path.join(publicDir, "../server/cities.json")
+  )} ${path.relative(cwd, path.join(publicDir, "cities.json"))}`;
+  console.log(cmd);
+  cp.execSync(cmd);
 }

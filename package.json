@@ -19,7 +19,6 @@
     "css-minimizer-webpack-plugin": "^4.1.0",
     "mini-css-extract-plugin": "^2.6.1",
     "path-browserify": "^1.0.1",
-    "pinyin": "^3.0.0-alpha.5",
     "prettier": "^2.7.1",
     "process": "^0.11.10",
     "serve": "^14.0.1",
@@ -29,5 +28,8 @@
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.11.1"
+  },
+  "optionalDependencies": {
+    "pinyin": "^3.0.0-alpha.5"
   }
 }

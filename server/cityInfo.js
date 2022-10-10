@@ -1,7 +1,11 @@
 const fs = require("fs");
 const path = require("path");
 const pinyin = require("pinyin").default;
-const publicDir = path.join(__dirname, "../public");
+const clientWebpackConfig = require("../client/webpack.config.js");
+const serverWebpackConfig = require("../server/webpack.config.js");
+const publicDir = clientWebpackConfig.output.path;
+const webDir = path.join(__dirname, "../");
+const serverDir = path.join(webDir, "server/");
 
 const citiesTable = `北京市	110000	010
 北京市市辖区	110100	010
@@ -3635,14 +3639,22 @@ function normalizedCities(cities = citiesTable) {
 function writeCities() {
   let cities = normalizedCities(citiesTable);
   cities = JSON.stringify(cities.byCityFirstLetter, null, 2);
-  const filepath = path.join(publicDir, "cities.json");
+  const cfile = path.join(publicDir, "cities.json");
+  const sfile = path.join(serverDir, "cities.json");
   try {
-    fs.mkdirSync(path.dirname(filepath));
+    fs.mkdirSync(path.dirname(cfile));
+    fs.mkdirSync(path.dirname(sfile));
   } catch (ex) {
     if (ex.code !== "EEXIST") throw ex;
   }
-  fs.writeFileSync(filepath, cities);
-  console.log(`fs.write public/cities.json success.`);
+  fs.writeFileSync(cfile, cities);
+  fs.writeFileSync(sfile, cities);
+  console.log(
+    `fs.write ${path.relative(webDir, cfile)} and ${path.relative(
+      webDir,
+      sfile
+    )} success.`
+  );
 }
 
 writeCities.normalizedCities = normalizedCities;

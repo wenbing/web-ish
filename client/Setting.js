@@ -189,8 +189,7 @@ Setting.getInitialData = async () => {
   let selected;
   let data;
   if (process.env.BUILD_TARGET === "node") {
-    const info = require("../server/cityInfo").normalizedCities();
-    data = info.byCityFirstLetter;
+    data = require("../server/cities.json");
   }
   if (process.env.BUILD_TARGET === "web") {
     data = await (await fetch(`${pagesPublicPath}/cities.json`)).json();
