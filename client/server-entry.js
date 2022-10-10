@@ -6,6 +6,7 @@ import { renderToPipeableStream } from "react-dom/server";
 
 import { match } from "./routes";
 import App from "./App";
+import icon from "./icon.png";
 
 export async function createError(opts) {
   const { error, serverDir, publicDir, url } = opts;
@@ -118,6 +119,8 @@ export async function createDoc(opts) {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="${icon}">
+    <link rel="apple-touch-icon" href="${icon}">
     <title>${title}</title>
     ${assets.header.join("\n\t")}
   </head>

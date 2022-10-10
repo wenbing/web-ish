@@ -1,8 +1,8 @@
 import React, { Suspense, useEffect, useState } from "react";
+import "./App.css";
 import Nav from "./Nav";
 import DateCard from "./DateCard";
 import Weather from "./Weather";
-import "./App.css";
 import defaultCities, { STORAGE_KEY_CITIES } from "./defaultCities";
 
 const themes = {
@@ -24,7 +24,7 @@ function App(props) {
   const [adcodes, setAdcodes] = useState(props.adcodes);
   useEffect(() => {
     const data = localStorage.getItem(STORAGE_KEY_CITIES);
-    setAdcodes(JSON.parse(data).map(({ adcode }) => adcode));
+    if (data) setAdcodes(JSON.parse(data).map(({ adcode }) => adcode));
   }, []);
   return (
     <>

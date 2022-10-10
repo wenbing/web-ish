@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { match, pagesPublicPath } from "./routes";
+import "./Nav.css";
 
 function Nav(props) {
   const destination = props.route.destination;
@@ -20,17 +21,17 @@ function Nav(props) {
 
   return (
     <ul className="nav" onClick={handleClick}>
-      <li>
+      <li className="nav-item">
         <a
-          className={destination === "/index.html" ? "nav-item-current" : ""}
+          className={destination === "/index.html" ? "nav-link-current" : ""}
           href={`${pagesPublicPath}/index.html`}
         >
           Home
         </a>
       </li>
-      <li>
+      <li className="nav-item">
         <a
-          className={destination === "/setting.html" ? "nav-item-current" : ""}
+          className={destination === "/setting.html" ? "nav-link-current" : ""}
           href={`${pagesPublicPath}/setting.html`}
         >
           Setting

@@ -1,35 +1,17 @@
+html {
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  background-color: rgb(141 241 241 / 33%);
+  background-position: center;
+  background-size: auto;
+}
+
 @font-face {
   font-family: "LcdD";
   src: url("./LcdD.ttf");
-}
-html,
-body {
-  margin: 0;
-}
-
-ul.nav {
-  display: flex;
-  background-color: azure;
-  margin: 0;
-  padding-left: 0;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  list-style: none;
-}
-
-.nav li {
-  flex: auto;
-  max-width: 80px;
-}
-.nav li > a,
-.nav li > a:visited,
-.nav li > a:active {
-  text-decoration: none;
-}
-
-.nav li > a:hover,
-.nav li > a.nav-item-current {
-  text-decoration: underline;
 }
 
 .container {
@@ -82,7 +64,6 @@ ul.nav {
   font-size: medium;
   font-weight: bold;
 }
-
 .weather-location-icon {
   display: inline-block;
   transform: rotate(315deg);

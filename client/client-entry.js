@@ -3,8 +3,8 @@ import React from "react";
 import ReactDOM, { createRoot } from "react-dom/client";
 
 import App from "./App";
-import * as css from "./main.css";
 import { match, pagesPublicPath } from "./routes";
+import icon from "./icon.png";
 
 if (process.env.NODE_ENV === "development") {
   import("./tape-test");
@@ -28,8 +28,9 @@ const INITIAL_DATA = window.INITIAL_DATA;
       data = await Component.getInitialData();
     }
     const appProps = {
-      render: handleRender,
+      favicon: icon,
       route: INITIAL_DATA.route,
+      render: handleRender,
       ...data,
     };
     console.log("init appProps", appProps);
@@ -40,12 +41,13 @@ const INITIAL_DATA = window.INITIAL_DATA;
     const route = match(`${pathname}${search}`);
     let Component;
     let appProps = {
-      render: handleRender,
+      favicon: icon,
       route: {
         pathname: route.pathname,
         search: route.search,
         destination: route.destination,
       },
+      render: handleRender,
     };
     let appName;
     if (route.destination) {
@@ -72,8 +74,8 @@ const INITIAL_DATA = window.INITIAL_DATA;
   const container = document.getElementById("app");
   const root = ReactDOM.hydrateRoot(container, await initApp());
 
-  async function handleRender(pathname) {
-    const app = await createApp(pathname);
+  async function handleRender(loc) {
+    const app = await createApp(loc);
     root.render(app);
   }
 

@@ -7,6 +7,7 @@ const cwd = process.cwd();
 const webDir = path.join(__dirname, "../");
 const serverDir = path.resolve(__dirname, "../server_lib");
 const pkg = require("../package.json");
+const pagesPublicPath = require("../client/pagesPublicPath");
 
 const jsRule = [
   {
@@ -79,7 +80,14 @@ const server = {
       "./" +
       path.relative(cwd, path.resolve(__dirname, "../client/server-entry.js")),
   },
-  output: { path: serverDir, library: { type: "commonjs2" } },
+  output: {
+    path: serverDir,
+    library: { type: "commonjs2" },
+    publicPath:
+      process.env.GITHUB_PAGES === "true"
+        ? `https://wenbing.github.io${pagesPublicPath}/`
+        : `${pagesPublicPath}/`,
+  },
   module: { rules: jsRule.concat(serverCssRule).concat(assetRule) },
   plugins: [
     new MiniCssExtractPlugin(),
@@ -87,6 +95,7 @@ const server = {
   ],
   externals,
   externalsType: "node-commonjs",
+  optimization: { moduleIds: "named", chunkIds: "named", minimize: false },
 };
 
 module.exports = server;

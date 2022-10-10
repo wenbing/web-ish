@@ -1,0 +1,29 @@
+.nav {
+  display: flex;
+  background-color: azure;
+  margin: 0;
+  padding-left: 0;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  list-style: none;
+}
+.nav .nav-item {
+  flex: auto;
+  max-width: 80px;
+}
+.nav .nav-item:last-child {
+  margin-left: auto;
+  text-align: right;
+}
+.nav .nav-item > a {
+  transition: text-decoration 0.5s ease-out;
+}
+.nav .nav-item > a,
+.nav .nav-item > a:visited,
+.nav .nav-item > a:active {
+  text-decoration: none;
+}
+.nav .nav-item > a:hover,
+.nav .nav-item > a.nav-link-current {
+  text-decoration: underline;
+}
