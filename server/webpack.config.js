@@ -6,7 +6,6 @@ const mode =
 const cwd = process.cwd();
 const webDir = path.join(__dirname, "../");
 const serverDir = path.resolve(__dirname, "../server_lib");
-const pkg = require("../package.json");
 const pagesPublicPath = require("../client/pagesPublicPath");
 
 const jsRule = [
@@ -43,33 +42,6 @@ const serverCssRule = [
     ],
   },
 ];
-const externals = (o, cb) => {
-  // o.request startsWith: / ./ ../ \w+|@, aka. filepath or modulename
-  if (o.request.startsWith("/") || o.request.startsWith(".")) {
-    const r = path.resolve(o.context, o.request);
-    const isServerModules = path.relative(webDir, r).startsWith("server/");
-    if (isServerModules) {
-      return cb(null, `node-commonjs ${o.request}`);
-    }
-    const isServerUsed =
-      o.contextInfo.issuer &&
-      path.relative(webDir, o.contextInfo.issuer).startsWith("server/");
-    const isNodeModules = path.relative(webDir, r).startsWith("node_modules/");
-    if (isServerUsed && isNodeModules) {
-      return cb(null, `node-commonjs ${o.request}`);
-    }
-    return cb();
-  } else {
-    const deps = Object.assign({}, pkg.dependencies, pkg.devDependencies);
-    const name = o.request.split("/")[0];
-
-    const inDeps = Object.keys(deps).includes(name);
-    if (inDeps) {
-      return cb(null, `node-commonjs ${o.request}`);
-    }
-    return cb(null, o.request);
-  }
-};
 const target = "node";
 const server = {
   mode,
@@ -102,4 +74,18 @@ module.exports = server;
 
 if (require.main === module) {
   console.log(module.exports);
+}
+
+function externals(o, cb) {
+  // o.request startsWith: / ./ ../ \w+|@, aka. filepath or modulename
+  if (o.request.startsWith("/") || o.request.startsWith(".")) {
+    const r = path.resolve(o.context, o.request);
+    const isServerModules = path.relative(webDir, r).startsWith("server/");
+    if (isServerModules) {
+      return cb(null, `node-commonjs ${o.request}`);
+    }
+    return cb();
+  } else {
+    return cb(null, `node-commonjs ${o.request}`);
+  }
 }

@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
 
+let fetch;
+if (process.env.BUILD_TARGET === "web") {
+  fetch = window.fetch;
+} else {
+  fetch = (...args) =>
+    import("../server/fetch.js").then((m) => m.default(...args));
+}
+
 const icons = {
   晴: "☀️",
   云: "☁️",
@@ -15,23 +23,25 @@ const bgColors = {
   雪: "#70dde1",
 };
 
-function useApi(initialCity) {
-  const [lives, setLives] = useState([]);
-  const [updateTime, setUpdateTime] = useState(Date.now());
-  const [city, setCity] = useState(initialCity);
+export async function fetchInfo(city) {
   const sp = new URLSearchParams();
   sp.append("key", "730462af18e87350041dcda934ca66c1");
   sp.append("city", city);
   const uri = `https://restapi.amap.com/v3/weather/weatherInfo?${sp.toString()}`;
+  const res = await fetch(uri);
+  const { lives } = await res.json();
+  return lives[0];
+}
+
+function useApi(initialCity, initialLives) {
+  const [lives, setLives] = useState(initialLives);
+  const [updateTime, setUpdateTime] = useState(Date.now());
+  const [city, setCity] = useState(initialCity);
 
   useEffect(() => {
-    setLives([]);
-    async function fetchInfo() {
-      const res = await fetch(uri);
-      const { lives } = await res.json();
-      setLives(lives);
-    }
-    fetchInfo();
+    (async () => {
+      setLives(await fetchInfo(city));
+    })();
   }, [city, updateTime]);
   const doFetch = (doCity) => {
     const now = Date.now();
@@ -44,11 +54,11 @@ function useApi(initialCity) {
 }
 
 function Weather(props) {
-  const [{ lives }, doFetch] = useApi(props.initialCity);
+  const [{ lives }, doFetch] = useApi(props.city, props.lives);
   const handleClick = () => {
-    doFetch(props.initialCity);
+    doFetch(props.city);
   };
-  const isLoading = lives.length === 0;
+  const isLoading = lives === undefined;
   let style = {};
   if (isLoading) {
     return (
@@ -62,9 +72,9 @@ function Weather(props) {
     );
   }
 
-  const weather = lives[0].weather;
-  const temperature = lives[0].temperature;
-  let city = lives[0].city;
+  const weather = lives.weather;
+  const temperature = lives.temperature;
+  let city = lives.city;
   // if (city.endsWith("市")) city = city.slice(0, -1);
   const matched = weather.match(/.*([晴阴云雨雪]).*/);
   let wkey;

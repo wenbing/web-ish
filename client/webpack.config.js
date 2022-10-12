@@ -7,6 +7,7 @@ const setupMiddlewares = require("../server/setupMiddlewares");
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 const cwd = process.cwd();
+const webDir = path.join(__dirname, "../");
 const publicDir = path.join(__dirname, "../public");
 const serverDir = path.join(__dirname, "../server_lib");
 const pagesPublicPath = require("./pagesPublicPath");
@@ -77,6 +78,7 @@ const client = {
       stream: require.resolve("stream-browserify"),
     },
   },
+  externals,
   plugins: [
     new webpack.ProvidePlugin({
       // buffer: require.resolve('buffer'),
@@ -119,4 +121,16 @@ module.exports = client;
 
 if (require.main === module) {
   console.log(module.exports);
+}
+
+function externals(o, cb) {
+  // o.request startsWith: / ./ ../ \w+|@, aka. filepath or modulename
+  if (o.request.startsWith("/") || o.request.startsWith(".")) {
+    const r = path.resolve(o.context, o.request);
+    const isServerModules = path.relative(webDir, r).startsWith("server/");
+    if (isServerModules) {
+      return cb(null, `node-commonjs ${o.request}`);
+    }
+  }
+  return cb();
 }

@@ -22,7 +22,7 @@ const setupMiddlewares = (middlewares, devServer) => {
   serverCompiler.watch({}, function handleWatchRun(err, stats) {
     if (err) throw err; // 1)what occurred?
     logger.info("server compiler start");
-    console.log(stats.toString({ chunks: false, colors: true }));
+    logger.info(stats.toString({ chunks: false, colors: true }));
     logger.info("server compiler end");
     if (serverCompilerInvalid) {
       devServer.sendMessage(
