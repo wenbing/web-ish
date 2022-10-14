@@ -21,13 +21,15 @@ export async function createError(opts) {
     fileSystem: opts.fs || fs,
   });
   const route = match(url);
-  const initialData = {
+  const initProps = {
+    favicon: icon,
     route: {
       pathname: route.pathname,
       search: route.search,
       destination: route.destination,
     },
   };
+  const initialData = initProps;
   const title = "Error!";
   const doc = `<!doctype html>
 <html>
@@ -54,27 +56,30 @@ export async function createDoc(opts) {
   );
   const { publicPath } = stats;
   const route = match(url);
-  const initialData = {
+  const initProps = {
+    favicon: icon,
     route: {
       pathname: route.pathname,
       destination: route.destination,
       search: route.search,
     },
   };
+  const initialData = Object.assign({}, initProps);
   let Component;
   if (route.destination) {
     Component = await route.component;
   } else {
     Component = App;
   }
-  let appData = {};
+  let data;
   if (typeof Component.getInitialData === "function") {
-    appData = await Component.getInitialData();
+    data = await Component.getInitialData(initProps);
   }
+  const appProps = Object.assign({}, initProps, data);
   if (route.destination) {
-    initialData[route.name] = appData;
+    Object.assign(initialData, { [route.name]: data });
   }
-  const app = <Component route={initialData.route} {...appData} />;
+  const app = <Component {...appProps} />;
   const content = await new Promise((resolve, reject) => {
     let body = "";
     const writable = new Writable({
@@ -105,6 +110,14 @@ export async function createDoc(opts) {
     if (prefetchByName[route.name]) {
       clientAssets = clientAssets.concat(prefetchByName[route.name].assets);
     }
+  }
+  if (clientStats.children.preload) {
+    clientAssets = clientAssets.concat(
+      clientStats.children.preload.reduce(
+        (acc, item) => acc.concat(item.assets),
+        []
+      )
+    );
   }
   const assets = getAssets({
     assets: clientAssets,

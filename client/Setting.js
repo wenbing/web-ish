@@ -196,7 +196,7 @@ Setting.getInitialData = async () => {
   }
   const items = normalize(data);
   const citiesByAdCode = getCitiesBy("adcode", items);
-  selected = formatCities(defaultCities, citiesByAdCode);
+  selected = formatCities([], citiesByAdCode);
   return { selected };
 };
 

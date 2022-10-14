@@ -29,6 +29,7 @@ function DateCard(props) {
   return (
     <div className="container">
       <h2 className="block time-block">
+        <span className="timezone">Beijing</span>
         <span className="lcdd-font">{time}</span>
       </h2>
     </div>

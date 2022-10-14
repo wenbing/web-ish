@@ -6,49 +6,69 @@ import Weather, { fetchInfo } from "./Weather";
 import defaultCities, { STORAGE_KEY_CITIES } from "./defaultCities";
 
 const themes = {
-  light: { foreground: "#000000", background: "#eeeeee" },
-  dark: { foreground: "#ffffff", background: "#222222" },
+  light: { name: "light", foreground: "#000000", background: "#eeeeee" },
+  dark: { name: "dark", foreground: "#ffffff", background: "#222222" },
 };
 const ThemeContext = React.createContext(themes.light);
 
 const AsyncCompnent = React.lazy(() =>
-  import(/* webpackChunkName: 'async-component' */ "./AsyncComponent")
+  import(/* webpackPreload:true */ "./AsyncComponent.css").then(() =>
+    import(/* webpackChunkName: 'async-component' */ "./AsyncComponent")
+  )
 );
 
-function App(props) {
+export default function App(props) {
   const [adcodes, setAdcodes] = useState(props.adcodes);
+  const [lives, setLives] = useState(props.lives);
+  const isMy = props.route.search === "?my";
   useEffect(() => {
-    const data = localStorage.getItem(STORAGE_KEY_CITIES);
-    if (!data) return;
-    setAdcodes(JSON.parse(data).map(({ adcode }) => adcode));
-  }, []);
+    (async () => {
+      if (isMy) {
+        let data = localStorage.getItem(STORAGE_KEY_CITIES);
+        if (data) {
+          const keys = JSON.parse(data).map(({ adcode }) => adcode);
+          const infos = await Promise.all(keys.map((city) => fetchInfo(city)));
+          setLives(infos);
+          setAdcodes(keys);
+          return;
+        }
+      }
+      setLives(props.lives);
+      setAdcodes(props.adcodes);
+    })();
+  }, [props.route]);
   return (
     <>
       <Nav render={props.render} route={props.route}></Nav>
-      <DateCard date={props.date}></DateCard>
+
+      {!isMy && <DateCard date={props.date}></DateCard>}
 
       {adcodes.map((adcode, index) => (
         <Weather
           key={adcode}
           city={adcode}
-          lives={props.lives.find((item) => item.adcode === adcode)}
+          lives={lives.find((item) => item.adcode === adcode)}
         ></Weather>
       ))}
 
-      <ThemeContext.Provider value={themes.dark}>
-        <Suspense fallback={<div>Loading...</div>}>
-          {/* <AsyncCompnent /> */}
-        </Suspense>
-      </ThemeContext.Provider>
+      {!isMy && (
+        <div className="container">
+          <ThemeContext.Provider value={themes.dark}>
+            <Suspense fallback={<div>加载中...</div>}>
+              <AsyncCompnent />
+            </Suspense>
+          </ThemeContext.Provider>
+        </div>
+      )}
     </>
   );
 }
 
-App.getInitialData = async () => {
-  const lives = await Promise.all(defaultCities.map((city) => fetchInfo(city)));
-  return { date: Date.now(), adcodes: defaultCities, lives };
+App.getInitialData = async (props) => {
+  const isMy = props.route.search === "?my";
+  const adcodes = isMy ? [] : defaultCities;
+  const lives = await Promise.all(adcodes.map((city) => fetchInfo(city)));
+  return { date: Date.now(), adcodes, lives };
 };
 
 App.ThemeContext = ThemeContext;
-
-export default App;

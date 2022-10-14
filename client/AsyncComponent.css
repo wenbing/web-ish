@@ -1,9 +1,11 @@
-.async-component {
-  border: 5px solid blue;
-  padding: 10px;
+.block-count {
+  line-height: 80px;
+  font-size: 20px;
+  cursor: default;
+  user-select: none;
 }
-.async-button {
-  margin-bottom: 10px;
-  border: 5px solid blue;
-  background-color: white;
+
+.block-count .count {
+  min-width: 36px;
+  display: inline-block;
 }

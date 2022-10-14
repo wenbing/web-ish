@@ -1,9 +1,8 @@
-import { useEffect } from "react";
 import { match, pagesPublicPath } from "./routes";
 import "./Nav.css";
 
 function Nav(props) {
-  const destination = props.route.destination;
+  const { pathname, search, destination } = props.route;
   const handleClick = (evt) => {
     if (evt.target.tagName !== "A") {
       return;
@@ -15,7 +14,11 @@ function Nav(props) {
       route &&
       route.destination === props.route.destination &&
       route.search === props.route.search;
-    history[shouldReplace ? "replaceState" : "pushState"]({}, "", loc.pathname);
+    history[shouldReplace ? "replaceState" : "pushState"](
+      {},
+      "",
+      `${loc.pathname}${loc.search}`
+    );
     props.render(loc);
   };
 
@@ -23,7 +26,9 @@ function Nav(props) {
     <ul className="nav" onClick={handleClick}>
       <li className="nav-item">
         <a
-          className={destination === "/index.html" ? "nav-link-current" : ""}
+          className={
+            `${pathname}${search}` === "/index.html" ? "nav-link-current" : ""
+          }
           href={`${pagesPublicPath}/index.html`}
         >
           Home
@@ -31,7 +36,21 @@ function Nav(props) {
       </li>
       <li className="nav-item">
         <a
-          className={destination === "/setting.html" ? "nav-link-current" : ""}
+          className={
+            `${pathname}${search}` === "/index.html?my"
+              ? "nav-link-current"
+              : ""
+          }
+          href={`${pagesPublicPath}/index.html?my`}
+        >
+          My
+        </a>
+      </li>
+      <li className="nav-item">
+        <a
+          className={
+            `${pathname}${search}` === "/setting.html" ? "nav-link-current" : ""
+          }
           href={`${pagesPublicPath}/setting.html`}
         >
           Setting

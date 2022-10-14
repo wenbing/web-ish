@@ -17,6 +17,10 @@ const INITIAL_DATA = window.INITIAL_DATA;
     const route = match(
       `${pagesPublicPath}${INITIAL_DATA.route.pathname}${INITIAL_DATA.route.search}`
     );
+    const initProps = {
+      favicon: icon,
+      route: INITIAL_DATA.route,
+    };
     let Component;
     let data;
     if (route.destination) {
@@ -25,49 +29,47 @@ const INITIAL_DATA = window.INITIAL_DATA;
     } else {
       Component = App;
       // if (typeof Component.getInitialData === "function") {}
-      data = await Component.getInitialData();
+      data = await Component.getInitialData(initProps);
     }
-    const appProps = {
-      favicon: icon,
-      route: INITIAL_DATA.route,
+    const appProps = Object.assign({}, initProps, data, {
       render: handleRender,
-      ...data,
-    };
-    console.log("init appProps", appProps);
+    });
+    console.log("init appProps", JSON.stringify(appProps, null, 2));
     return <Component {...appProps} />;
   }
 
   async function createApp({ pathname, search }) {
     const route = match(`${pathname}${search}`);
     let Component;
-    let appProps = {
+    let initProps = {
       favicon: icon,
       route: {
         pathname: route.pathname,
         search: route.search,
         destination: route.destination,
       },
-      render: handleRender,
     };
-    let appName;
+    let name;
     if (route.destination) {
       Component = await route.component;
-      appName = route.name;
+      name = route.name;
     } else {
       Component = App;
-      appName = "app";
+      name = "app";
     }
-
+    let data;
     if (typeof Component.getInitialData === "function") {
-      let data;
       try {
-        data = await Component.getInitialData();
+        data = await Component.getInitialData(initProps);
       } catch (ex) {
         console.error(ex);
       }
-      Object.assign(appProps, INITIAL_DATA[appName], data);
+      data = Object.assign({}, INITIAL_DATA[name], data);
     }
-    console.log("render appProps", appProps);
+    const appProps = Object.assign({}, initProps, data, {
+      render: handleRender,
+    });
+    console.log("render appProps", JSON.stringify(appProps, null, 2));
     return <Component {...appProps} />;
   }
 

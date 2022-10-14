@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
-
 let fetch;
 if (process.env.BUILD_TARGET === "web") {
   fetch = window.fetch;
-} else {
+}
+if (process.env.BUILD_TARGET === "node") {
   fetch = (...args) =>
     import("../server/fetch.js").then((m) => m.default(...args));
 }
-
 const icons = {
   晴: "☀️",
   云: "☁️",
@@ -33,45 +32,18 @@ export async function fetchInfo(city) {
   return lives[0];
 }
 
-function useApi(initialCity, initialLives) {
-  const [lives, setLives] = useState(initialLives);
+export default function Weather(props) {
+  const [lives, setLives] = useState(props.lives);
   const [updateTime, setUpdateTime] = useState(Date.now());
-  const [city, setCity] = useState(initialCity);
-
-  useEffect(() => {
-    (async () => {
-      setLives(await fetchInfo(city));
-    })();
-  }, [city, updateTime]);
-  const doFetch = (doCity) => {
+  const handleUpdate = async () => {
     const now = Date.now();
-    if (now - updateTime > 10 * 1000) {
-      setCity(doCity);
+    const shouldUpdate = now - updateTime > 10 * 1000;
+    if (shouldUpdate) {
       setUpdateTime(now);
+      setLives(await fetchInfo(props.city));
     }
   };
-  return [{ lives }, doFetch];
-}
-
-function Weather(props) {
-  const [{ lives }, doFetch] = useApi(props.city, props.lives);
-  const handleClick = () => {
-    doFetch(props.city);
-  };
-  const isLoading = lives === undefined;
-  let style = {};
-  if (isLoading) {
-    return (
-      <div className="container">
-        <div
-          className="block weather-block"
-          onClick={handleClick}
-          style={style}
-        ></div>
-      </div>
-    );
-  }
-
+  const handleClick = async () => await handleUpdate();
   const weather = lives.weather;
   const temperature = lives.temperature;
   let city = lives.city;
@@ -84,7 +56,7 @@ function Weather(props) {
     wkey = "晴";
   }
   const icon = icons[wkey];
-  style = { backgroundColor: bgColors[wkey] };
+  const style = { backgroundColor: bgColors[wkey] };
   const infoStyle = {};
   if (city.length > 6) infoStyle.lineHeight = "1rem";
   return (
@@ -106,5 +78,3 @@ function Weather(props) {
     </div>
   );
 }
-
-export default Weather;
