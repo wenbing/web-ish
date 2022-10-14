@@ -12,7 +12,7 @@ const setupMiddlewares = (middlewares, devServer) => {
   const outputFileSystem = clientCompiler.outputFileSystem;
   const publicDir = clientCompiler.outputPath;
   const serverCompiler = webpack(serverWebpackConfig);
-  const serverDir = serverCompiler.outputPath;
+  const serverlibDir = serverCompiler.outputPath;
 
   let serverCompilerInvalid = null;
   serverCompiler.hooks.invalid.tap(middlewareName, (filename, changeTime) => {
@@ -48,10 +48,15 @@ const setupMiddlewares = (middlewares, devServer) => {
       return next();
     }
     logger.info(req.method, req.url);
-    const renderPath = require.resolve(`${serverDir}/render`);
+    const renderPath = require.resolve(`${serverlibDir}/render`);
     clearRequireCache(renderPath);
     const { createDoc, createError } = require(renderPath);
-    const opts = { serverDir, publicDir, url: req.url, fs: outputFileSystem };
+    const opts = {
+      serverlibDir,
+      publicDir,
+      url: req.url,
+      fs: outputFileSystem,
+    };
     try {
       const doc = await createDoc(opts);
       res.end(doc);

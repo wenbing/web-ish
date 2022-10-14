@@ -5,7 +5,7 @@ const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 const cwd = process.cwd();
 const webDir = path.join(__dirname, "../");
-const serverDir = path.resolve(__dirname, "../server_lib");
+const serverlibDir = path.resolve(__dirname, "../server_lib");
 const pagesPublicPath = require("../client/pagesPublicPath");
 
 const jsRule = [
@@ -53,7 +53,7 @@ const server = {
       path.relative(cwd, path.resolve(__dirname, "../client/server-entry.js")),
   },
   output: {
-    path: serverDir,
+    path: serverlibDir,
     library: { type: "commonjs2" },
     publicPath:
       process.env.GITHUB_PAGES === "true"

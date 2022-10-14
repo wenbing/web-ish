@@ -5,8 +5,9 @@ const cp = require("child_process");
 
 const clientWebpackConfig = require("../client/webpack.config");
 const serverWebpackConfig = require("./webpack.config");
+const webDir = path.join(__dirname, "../");
 const publicDir = clientWebpackConfig.output.path;
-const serverDir = serverWebpackConfig.output.path;
+const serverlibDir = serverWebpackConfig.output.path;
 const pagesPublicPath = require("../client/pagesPublicPath");
 
 async function writeDoc({ pathname }) {
@@ -14,7 +15,7 @@ async function writeDoc({ pathname }) {
   let doc;
   try {
     doc = await createDoc({
-      serverDir,
+      serverlibDir,
       publicDir,
       url: `${pagesPublicPath}${pathname}`,
     });
@@ -76,7 +77,7 @@ function cpCitiesJSON() {
   const cwd = process.cwd();
   const cmd = `cp ${path.relative(
     cwd,
-    path.join(publicDir, "../server/cities.json")
+    path.join(webDir, "server/cities.json")
   )} ${path.relative(cwd, path.join(publicDir, "cities.json"))}`;
   console.log(cmd);
   cp.execSync(cmd);

@@ -7,7 +7,7 @@ import pagesPublicPath from "../client/pagesPublicPath.js";
 import render from "../server_lib/render.js";
 
 const publicDir = clientWebpackConfig.output.path;
-const serverDir = serverWebpackConfig.output.path;
+const serverlibDir = serverWebpackConfig.output.path;
 const { createDoc, createError } = render;
 
 async function handler(req, res) {
@@ -30,11 +30,19 @@ async function handler(req, res) {
   }
 
   try {
-    const doc = await createDoc({ serverDir, publicDir, url: req.url });
+    const doc = await createDoc({
+      serverlibDir,
+      publicDir,
+      url: req.url,
+    });
     res.end(doc);
   } catch (ex) {
     console.error(ex);
-    const doc = await createError({ serverDir, publicDir, url: req.url });
+    const doc = await createError({
+      serverlibDir,
+      publicDir,
+      url: req.url,
+    });
     res.writeHead(500, http.STATUS_CODES[500]);
     res.end(doc);
   }

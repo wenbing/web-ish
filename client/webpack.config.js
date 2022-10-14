@@ -7,10 +7,10 @@ const setupMiddlewares = require("../server/setupMiddlewares");
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 const cwd = process.cwd();
-const webDir = path.join(__dirname, "../");
-const publicDir = path.join(__dirname, "../public");
-const serverDir = path.join(__dirname, "../server_lib");
 const pagesPublicPath = require("./pagesPublicPath");
+const webDir = path.join(__dirname, "../");
+const publicDir = path.join(__dirname, "../public", pagesPublicPath.slice(1));
+const serverlibDir = path.join(__dirname, "../server_lib");
 
 const jsRule = [
   {
@@ -84,7 +84,7 @@ const client = {
       // buffer: require.resolve('buffer'),
       process: require.resolve("process/browser"),
     }),
-    new StatsWriterPlugin({ outputPath: serverDir }),
+    new StatsWriterPlugin({ outputPath: serverlibDir }),
     new MiniCssExtractPlugin(miniCssOpts),
     new webpack.DefinePlugin({
       "process.env.BUILD_TARGET": JSON.stringify(target),

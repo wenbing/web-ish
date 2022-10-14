@@ -9,9 +9,9 @@ import App from "./App";
 import icon from "./icon.png";
 
 export async function createError(opts) {
-  const { error, serverDir, publicDir, url } = opts;
+  const { error, serverlibDir, publicDir, url } = opts;
   const stats = JSON.parse(
-    fs.readFileSync(path.join(serverDir, "stats.json")).toString()
+    fs.readFileSync(path.join(serverlibDir, "stats.json")).toString()
   );
   const { publicPath } = stats;
   const assets = getAssets({
@@ -50,9 +50,9 @@ export async function createError(opts) {
 }
 
 export async function createDoc(opts) {
-  const { serverDir, publicDir, url } = opts;
+  const { serverlibDir, publicDir, url } = opts;
   const stats = JSON.parse(
-    fs.readFileSync(path.join(serverDir, "stats.json")).toString()
+    fs.readFileSync(path.join(serverlibDir, "stats.json")).toString()
   );
   const { publicPath } = stats;
   const route = match(url);
