@@ -9,8 +9,13 @@ const mode =
 const cwd = process.cwd();
 const pagesPublicPath = require("./pagesPublicPath");
 const webDir = path.join(__dirname, "../");
-const publicDir = path.join(__dirname, "../public", pagesPublicPath.slice(1));
 const serverlibDir = path.join(__dirname, "../server_lib");
+let publicDir;
+if (process.env.GITHUB_PAGES === "true") {
+  publicDir = path.join(__dirname, "../public");
+} else {
+  publicDir = path.join(__dirname, "../public", pagesPublicPath.slice(1));
+}
 
 const jsRule = [
   {
