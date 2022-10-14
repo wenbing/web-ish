@@ -20,10 +20,10 @@ const AsyncCompnent = React.lazy(() =>
 export default function App(props) {
   const [adcodes, setAdcodes] = useState(props.adcodes);
   const [lives, setLives] = useState(props.lives);
-  const isMy = props.route.search === "?my";
+  const isMine = props.route.destination === "/mine.html";
   useEffect(() => {
     (async () => {
-      if (isMy) {
+      if (isMine) {
         let data = localStorage.getItem(STORAGE_KEY_CITIES);
         if (data) {
           const keys = JSON.parse(data).map(({ adcode }) => adcode);
@@ -41,7 +41,7 @@ export default function App(props) {
     <>
       <Nav render={props.render} route={props.route}></Nav>
 
-      {!isMy && <DateCard date={props.date}></DateCard>}
+      {!isMine && <DateCard date={props.date}></DateCard>}
 
       {adcodes.map((adcode, index) => (
         <Weather
@@ -51,7 +51,7 @@ export default function App(props) {
         ></Weather>
       ))}
 
-      {!isMy && (
+      {!isMine && (
         <div className="container">
           <ThemeContext.Provider value={themes.dark}>
             <Suspense fallback={<div>加载中...</div>}>
@@ -65,8 +65,8 @@ export default function App(props) {
 }
 
 App.getInitialData = async (props) => {
-  const isMy = props.route.search === "?my";
-  const adcodes = isMy ? [] : defaultCities;
+  const isMine = props.route.destination === "/mine.html";
+  const adcodes = isMine ? [] : defaultCities;
   const lives = await Promise.all(adcodes.map((city) => fetchInfo(city)));
   return { date: Date.now(), adcodes, lives };
 };

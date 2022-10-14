@@ -10,6 +10,12 @@ export const routes = [
     component: import("./App").then((m) => m.default),
   },
   {
+    name: "mine",
+    source: /^\/(?:mine(?:\.html)?)?(?:\/)?$/i,
+    destination: "/mine.html",
+    component: import("./App").then((m) => m.default),
+  },
+  {
     name: "setting",
     source: /^\/setting(?:\.html)?(?:\/)?$/i,
     destination: "/setting.html",

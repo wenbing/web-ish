@@ -37,13 +37,11 @@ function Nav(props) {
       <li className="nav-item">
         <a
           className={
-            `${pathname}${search}` === "/index.html?my"
-              ? "nav-link-current"
-              : ""
+            `${pathname}${search}` === "/mine.html" ? "nav-link-current" : ""
           }
-          href={`${pagesPublicPath}/index.html?my`}
+          href={`${pagesPublicPath}/mine.html`}
         >
-          My
+          Mine
         </a>
       </li>
       <li className="nav-item">
