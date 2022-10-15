@@ -34,7 +34,7 @@ export default function App(props) {
         }
       }
       if (!isMine && process.env.GITHUB_PAGES === "true") {
-        const keys = adcodes;
+        const keys = props.adcodes;
         const infos = await Promise.all(keys.map((city) => fetchInfo(city)));
         setLives(infos);
         setAdcodes(keys);
