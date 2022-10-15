@@ -43,6 +43,15 @@ const serverCssRule = [
   },
 ];
 const target = "node";
+const defines = {
+  "process.env.NODE_ENV": JSON.stringify(mode),
+  "process.env.BUILD_TARGET": JSON.stringify(target),
+};
+if (process.env.GITHUB_PAGES !== undefined) {
+  defines["process.env.GITHUB_PAGES"] = JSON.stringify(
+    process.env.GITHUB_PAGES
+  );
+}
 const server = {
   mode,
   target,
@@ -56,15 +65,13 @@ const server = {
     path: serverlibDir,
     library: { type: "commonjs2" },
     publicPath:
+      process.env.NODE_ENV === "production" &&
       process.env.GITHUB_PAGES === "true"
         ? `https://wenbing.github.io${pagesPublicPath}/`
         : `${pagesPublicPath}/`,
   },
   module: { rules: jsRule.concat(serverCssRule).concat(assetRule) },
-  plugins: [
-    new MiniCssExtractPlugin(),
-    new DefinePlugin({ "process.env.BUILD_TARGET": JSON.stringify(target) }),
-  ],
+  plugins: [new MiniCssExtractPlugin(), new DefinePlugin(defines)],
   externals,
   externalsType: "node-commonjs",
   optimization: { moduleIds: "named", chunkIds: "named", minimize: false },

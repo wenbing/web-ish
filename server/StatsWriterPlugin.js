@@ -7,6 +7,7 @@ class StatsWriterPlugin {
       filename: "stats.json",
       stats: {
         preset: "none",
+        builtAt: true,
         publicPath: true,
         entrypoints: true,
         chunkGroupAuxiliary: true,

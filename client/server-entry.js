@@ -13,7 +13,7 @@ export async function createError(opts) {
   const stats = JSON.parse(
     fs.readFileSync(path.join(serverlibDir, "stats.json")).toString()
   );
-  const { publicPath } = stats;
+  const { builtAt, publicPath } = stats;
   const assets = getAssets({
     assets: stats.entrypoints.error.assets,
     publicDir,
@@ -22,6 +22,7 @@ export async function createError(opts) {
   });
   const route = match(url);
   const initProps = {
+    builtAt,
     favicon: icon,
     route: {
       pathname: route.pathname,
@@ -29,7 +30,7 @@ export async function createError(opts) {
       destination: route.destination,
     },
   };
-  const initialData = initProps;
+  const initialData = Object.assign({}, initProps);
   const title = "Error!";
   const doc = `<!doctype html>
 <html>
@@ -54,9 +55,10 @@ export async function createDoc(opts) {
   const stats = JSON.parse(
     fs.readFileSync(path.join(serverlibDir, "stats.json")).toString()
   );
-  const { publicPath } = stats;
+  const { builtAt, publicPath } = stats;
   const route = match(url);
   const initProps = {
+    builtAt,
     favicon: icon,
     route: {
       pathname: route.pathname,

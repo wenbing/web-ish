@@ -19,6 +19,7 @@ const INITIAL_DATA = window.INITIAL_DATA;
     );
     const initProps = {
       favicon: icon,
+      builtAt: INITIAL_DATA.builtAt,
       route: INITIAL_DATA.route,
     };
     let Component;
@@ -43,6 +44,7 @@ const INITIAL_DATA = window.INITIAL_DATA;
     let Component;
     let initProps = {
       favicon: icon,
+      builtAt: INITIAL_DATA.builtAt,
       route: {
         pathname: route.pathname,
         search: route.search,

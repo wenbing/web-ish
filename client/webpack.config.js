@@ -11,7 +11,10 @@ const pagesPublicPath = require("./pagesPublicPath");
 const webDir = path.join(__dirname, "../");
 const serverlibDir = path.join(__dirname, "../server_lib");
 let publicDir;
-if (process.env.GITHUB_PAGES === "true") {
+if (
+  process.env.NODE_ENV === "production" &&
+  process.env.GITHUB_PAGES === "true"
+) {
   publicDir = path.join(__dirname, "../public");
 } else {
   publicDir = path.join(__dirname, "../public", pagesPublicPath.slice(1));
@@ -53,7 +56,7 @@ const entry = {
 const output = {
   path: publicDir,
   publicPath:
-    process.env.GITHUB_PAGES === "true"
+    process.env.NODE_ENV === "production" && process.env.GITHUB_PAGES === "true"
       ? `https://wenbing.github.io${pagesPublicPath}/`
       : `${pagesPublicPath}/`,
   filename: "[name].js",
@@ -71,6 +74,15 @@ if (mode === "production") {
   });
 }
 const target = "web";
+const defines = {
+  "process.env.NODE_ENV": JSON.stringify(mode),
+  "process.env.BUILD_TARGET": JSON.stringify(target),
+};
+if (process.env.GITHUB_PAGES !== undefined) {
+  defines["process.env.GITHUB_PAGES"] = JSON.stringify(
+    process.env.GITHUB_PAGES
+  );
+}
 const client = {
   mode,
   entry,
@@ -91,9 +103,7 @@ const client = {
     }),
     new StatsWriterPlugin({ outputPath: serverlibDir }),
     new MiniCssExtractPlugin(miniCssOpts),
-    new webpack.DefinePlugin({
-      "process.env.BUILD_TARGET": JSON.stringify(target),
-    }),
+    new webpack.DefinePlugin(defines),
   ],
   stats: { logging: "info" },
 };
