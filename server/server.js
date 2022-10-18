@@ -1,18 +1,16 @@
-import http from "node:http";
-import path from "node:path";
-import serveHandler from "serve-handler";
-import clientWebpackConfig from "../client/webpack.config.js";
-import serverWebpackConfig from "../server/webpack.config.js";
-import pagesPublicPath from "../client/pagesPublicPath.js";
-import render from "../server_lib/render.js";
+const http = require("http");
+const path = require("path");
+const serveHandler = require("serve-handler");
+const paths = require("../server/paths.js");
+const render = require("../server_lib/render.js");
 
-const publicDir = clientWebpackConfig.output.path;
-const serverlibDir = serverWebpackConfig.output.path;
+const { publicDir, serverlibDir, publicPath } = paths;
 const { createDoc, createError } = render;
 
 async function handler(req, res) {
-  if (!req.url.startsWith(pagesPublicPath)) {
-    throw new Error(`req.url should startsWith ${pagesPublicPath}: ${req.url}`);
+  if (req.url === "/favicon.ico") res.end();
+  if (!req.url.startsWith(publicPath)) {
+    throw new Error(`req.url should startsWith ${publicPath}: ${req.url}`);
   }
   const pathname =
     req.url.indexOf("?") === -1
@@ -24,7 +22,7 @@ async function handler(req, res) {
     req.headers.accept.indexOf("text/html") !== -1 &&
     (extname === "" || extname === ".html");
   if (!isDoc) {
-    req.url = req.url.slice(pagesPublicPath.length);
+    req.url = req.url.slice(publicPath.length);
     await serveHandler(req, res, { public: publicDir });
     return;
   }
@@ -35,6 +33,9 @@ async function handler(req, res) {
       publicDir,
       url: req.url,
     });
+    res.writeHead(200, {
+      "Content-Type": "text/html",
+    });
     res.end(doc);
   } catch (ex) {
     console.error(ex);
@@ -43,7 +44,9 @@ async function handler(req, res) {
       publicDir,
       url: req.url,
     });
-    res.writeHead(500, http.STATUS_CODES[500]);
+    res.writeHead(500, http.STATUS_CODES[500], {
+      "Content-Type": "text/html",
+    });
     res.end(doc);
   }
 }
@@ -58,6 +61,6 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(8080, function () {
+server.listen(8000, function () {
   console.log(`server is listening at ${JSON.stringify(this.address())}`);
 });

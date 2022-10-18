@@ -5,10 +5,13 @@ const cp = require("child_process");
 
 const clientWebpackConfig = require("../client/webpack.config");
 const serverWebpackConfig = require("./webpack.config");
-const webDir = path.join(__dirname, "../");
-const publicDir = clientWebpackConfig.output.path;
-const serverlibDir = serverWebpackConfig.output.path;
-const pagesPublicPath = require("../client/pagesPublicPath");
+const {
+  cwd,
+  webDir,
+  publicDir,
+  serverlibDir,
+  publicPath,
+} = require("../server/paths.js");
 
 async function writeDoc({ pathname }) {
   const { createDoc } = require("../server_lib/render");
@@ -17,7 +20,8 @@ async function writeDoc({ pathname }) {
     doc = await createDoc({
       serverlibDir,
       publicDir,
-      url: `${pagesPublicPath}${pathname}`,
+      url: `${publicPath}${pathname}`,
+      isStatic: true,
     });
   } catch (ex) {
     console.error("writeDoc met", ex.stack);
@@ -31,7 +35,7 @@ async function writeDoc({ pathname }) {
     if (ex.code !== "EEXIST") throw ex;
   }
   fs.writeFileSync(filepath, doc);
-  console.log(`fs.write public${filename} success.`);
+  console.log(`fs.write ${path.relative(webDir, filepath)} success.`);
 }
 
 if (require.main === module) {
@@ -48,7 +52,7 @@ if (require.main === module) {
     console.log(stats.toString({ colors: true }));
     cpCitiesJSON();
     const cliOpts = parseArgv();
-    (cliOpts.pathname || ["/"]).forEach((pathname) => {
+    (cliOpts.pathname || []).forEach((pathname) => {
       writeDoc({ pathname });
     });
   });
@@ -74,7 +78,6 @@ function parseArgv() {
 }
 
 function cpCitiesJSON() {
-  const cwd = process.cwd();
   const cmd = `cp ${path.relative(
     cwd,
     path.join(webDir, "server/cities.json")

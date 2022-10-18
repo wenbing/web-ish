@@ -6,19 +6,13 @@ const StatsWriterPlugin = require("../server/StatsWriterPlugin");
 const setupMiddlewares = require("../server/setupMiddlewares");
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
-const cwd = process.cwd();
-const pagesPublicPath = require("./pagesPublicPath");
-const webDir = path.join(__dirname, "../");
-const serverlibDir = path.join(__dirname, "../server_lib");
-let publicDir;
-if (
-  process.env.NODE_ENV === "production" &&
-  process.env.GITHUB_PAGES === "true"
-) {
-  publicDir = path.join(__dirname, "../public");
-} else {
-  publicDir = path.join(__dirname, "../public", pagesPublicPath.slice(1));
-}
+const {
+  cwd,
+  webDir,
+  publicDir,
+  serverlibDir,
+  publicPath,
+} = require("../server/paths.js");
 
 const jsRule = [
   {
@@ -57,8 +51,8 @@ const output = {
   path: publicDir,
   publicPath:
     process.env.NODE_ENV === "production" && process.env.GITHUB_PAGES === "true"
-      ? `https://wenbing.github.io${pagesPublicPath}/`
-      : `${pagesPublicPath}/`,
+      ? `https://wenbing.github.io${publicPath}/`
+      : `${publicPath}/`,
   filename: "[name].js",
   chunkFilename: "[name].js",
 };
@@ -113,8 +107,8 @@ if (mode === "development") {
     hot: true,
     port: 3000,
     setupMiddlewares,
-    static: { directory: publicDir, publicPath: pagesPublicPath },
-    devMiddleware: { publicPath: pagesPublicPath },
+    static: { directory: publicDir, publicPath },
+    devMiddleware: { publicPath },
   };
 } else if (mode === "production") {
   client.optimization = {

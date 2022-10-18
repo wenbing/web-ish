@@ -1,4 +1,4 @@
-export const pagesPublicPath = require("./pagesPublicPath");
+export const publicPath = require("./publicPath");
 
 export const routes = [
   {
@@ -29,10 +29,10 @@ export function match(url) {
     searchPosition === -1
       ? [url, ""]
       : [url.slice(0, searchPosition), url.slice(searchPosition)];
-  if (!pathname.startsWith(pagesPublicPath)) {
+  if (!pathname.startsWith(publicPath)) {
     return { pathname, search, destination: null };
   }
-  const striped = pathname.slice(pagesPublicPath.length);
+  const striped = pathname.slice(publicPath.length);
   const len = routes.length;
   for (let i = 0; i < len; i++) {
     const route = routes[i];

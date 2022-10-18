@@ -51,7 +51,7 @@ export async function createError(opts) {
 }
 
 export async function createDoc(opts) {
-  const { serverlibDir, publicDir, url } = opts;
+  const { serverlibDir, publicDir, url, isStatic } = opts;
   const stats = JSON.parse(
     fs.readFileSync(path.join(serverlibDir, "stats.json")).toString()
   );
@@ -60,6 +60,7 @@ export async function createDoc(opts) {
   const initProps = {
     builtAt,
     favicon: icon,
+    isStatic,
     route: {
       pathname: route.pathname,
       destination: route.destination,

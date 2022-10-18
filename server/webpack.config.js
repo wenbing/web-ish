@@ -3,10 +3,7 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { DefinePlugin } = require("webpack");
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
-const cwd = process.cwd();
-const webDir = path.join(__dirname, "../");
-const serverlibDir = path.resolve(__dirname, "../server_lib");
-const pagesPublicPath = require("../client/pagesPublicPath");
+const { cwd, webDir, serverlibDir, publicPath } = require("../server/paths.js");
 
 const jsRule = [
   {
@@ -67,8 +64,8 @@ const server = {
     publicPath:
       process.env.NODE_ENV === "production" &&
       process.env.GITHUB_PAGES === "true"
-        ? `https://wenbing.github.io${pagesPublicPath}/`
-        : `${pagesPublicPath}/`,
+        ? `https://wenbing.github.io${publicPath}/`
+        : `${publicPath}/`,
   },
   module: { rules: jsRule.concat(serverCssRule).concat(assetRule) },
   plugins: [new MiniCssExtractPlugin(), new DefinePlugin(defines)],

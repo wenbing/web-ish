@@ -33,7 +33,7 @@ export default function App(props) {
           return;
         }
       }
-      if (!isMine && process.env.GITHUB_PAGES === "true") {
+      if (!isMine && props.isStatic) {
         const keys = props.adcodes;
         const infos = await Promise.all(keys.map((city) => fetchInfo(city)));
         setLives(infos);

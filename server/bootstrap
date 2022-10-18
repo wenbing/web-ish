@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+NODEJS=/opt/function/runtime/nodejs14.18/rtsp/nodejs/bin/node
+NODE_ENV=production $NODEJS $RUNTIME_CODE_ROOT/server/server.js

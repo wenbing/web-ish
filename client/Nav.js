@@ -1,4 +1,4 @@
-import { match, pagesPublicPath } from "./routes";
+import { match, publicPath } from "./routes";
 import "./Nav.css";
 
 function Nav(props) {
@@ -29,7 +29,7 @@ function Nav(props) {
           className={
             `${pathname}${search}` === "/index.html" ? "nav-link-current" : ""
           }
-          href={`${pagesPublicPath}/index.html`}
+          href={`${publicPath}/index.html`}
         >
           Home
         </a>
@@ -39,7 +39,7 @@ function Nav(props) {
           className={
             `${pathname}${search}` === "/mine.html" ? "nav-link-current" : ""
           }
-          href={`${pagesPublicPath}/mine.html`}
+          href={`${publicPath}/mine.html`}
         >
           Mine
         </a>
@@ -49,7 +49,7 @@ function Nav(props) {
           className={
             `${pathname}${search}` === "/setting.html" ? "nav-link-current" : ""
           }
-          href={`${pagesPublicPath}/setting.html`}
+          href={`${publicPath}/setting.html`}
         >
           Setting
         </a>

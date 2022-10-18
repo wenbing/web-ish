@@ -1,7 +1,7 @@
 import { useEffect, useState, useDeferredValue, useMemo } from "react";
 import Nav from "./Nav";
 import defaultCities, { STORAGE_KEY_CITIES } from "./defaultCities";
-import { pagesPublicPath } from "./routes";
+import { publicPath } from "./routes";
 import "./Setting.css";
 
 // cities, items, byFirstLetter, byPinyin, byAdcode, byName
@@ -62,7 +62,7 @@ function useCity(initials) {
     (async function () {
       let data;
       try {
-        data = await (await fetch(`${pagesPublicPath}/cities.json`)).json();
+        data = await (await fetch(`${publicPath}/cities.json`)).json();
       } catch (ex) {
         console.error(ex);
         return;
@@ -192,7 +192,7 @@ Setting.getInitialData = async () => {
     data = require("../server/cities.json");
   }
   if (process.env.BUILD_TARGET === "web") {
-    data = await (await fetch(`${pagesPublicPath}/cities.json`)).json();
+    data = await (await fetch(`${publicPath}/cities.json`)).json();
   }
   const items = normalize(data);
   const citiesByAdCode = getCitiesBy("adcode", items);

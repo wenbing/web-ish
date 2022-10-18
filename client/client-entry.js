@@ -1,9 +1,8 @@
-import path from "path-browserify";
 import React from "react";
-import ReactDOM, { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom/client";
 
 import App from "./App";
-import { match, pagesPublicPath } from "./routes";
+import { match, publicPath } from "./routes";
 import icon from "./icon.png";
 
 if (process.env.NODE_ENV === "development") {
@@ -15,13 +14,16 @@ const INITIAL_DATA = window.INITIAL_DATA;
 (async function main() {
   async function initApp() {
     const route = match(
-      `${pagesPublicPath}${INITIAL_DATA.route.pathname}${INITIAL_DATA.route.search}`
+      `${publicPath}${INITIAL_DATA.route.pathname}${INITIAL_DATA.route.search}`
     );
     const initProps = {
       favicon: icon,
       builtAt: INITIAL_DATA.builtAt,
       route: INITIAL_DATA.route,
     };
+    if (INITIAL_DATA.isStatic !== undefined) {
+      initProps.isStatic = INITIAL_DATA.isStatic;
+    }
     let Component;
     let data;
     if (route.destination) {
@@ -51,6 +53,9 @@ const INITIAL_DATA = window.INITIAL_DATA;
         destination: route.destination,
       },
     };
+    if (INITIAL_DATA.isStatic !== undefined) {
+      initProps.isStatic = INITIAL_DATA.isStatic;
+    }
     let name;
     if (route.destination) {
       Component = await route.component;

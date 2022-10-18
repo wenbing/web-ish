@@ -1,13 +1,144 @@
 const fs = require("fs");
 const path = require("path");
 const pinyin = require("pinyin").default;
-const clientWebpackConfig = require("../client/webpack.config.js");
-const serverWebpackConfig = require("../server/webpack.config.js");
-const publicDir = clientWebpackConfig.output.path;
-const webDir = path.join(__dirname, "../");
-const serverDir = path.join(webDir, "server/");
+const { webDir, publicDir, serverDir } = require("../server/paths.js");
 
-const citiesTable = `北京市	110000	010
+function nameToPinyin(name) {
+  let replaced = {
+    县: "xian",
+    区: "qu",
+    地: "di",
+    家: "jia",
+    都: "du",
+    和: "he",
+    南: "nan",
+    阿: "a",
+    景: "jing",
+    大: "da",
+    繁: "fan",
+    扎: "zha",
+    省: "sheng",
+    齐: "qi",
+    伯: "bo",
+    盖: "gai",
+    宁: "ning",
+    泽: "ze",
+    甸: "dian",
+    广: "guang",
+    氏: "shi",
+    枝: "zhi",
+    若: "ruo",
+    合: "he",
+    红: "hong",
+    车: "che",
+    重: "chong",
+  };
+  const reg = new RegExp(`(?:${Object.keys(replaced).join("|")})`, "g");
+  const n = name.replace(reg, function (matched, index, string) {
+    return replaced[matched];
+  });
+  let full;
+  full = pinyin(n, {
+    style: "tone2",
+    heteronym: true,
+    segment: true,
+    group: true,
+  });
+  full = full
+    .map((i) => i.map((j) => j.replace(/\d+/g, ""))) // 去除音调
+    .map((i) =>
+      i.slice(1).reduce(
+        ([a], j) => {
+          if (a === j) return [a];
+          return [].concat(a).concat(j);
+        },
+        [i[0]]
+      )
+    );
+  const hasMultipleHeteronym = full.filter((i) => i.length > 1).length > 1;
+  if (hasMultipleHeteronym) throw new Error("There are multiple heteronym");
+  full = full.slice(1).reduce((acc, item) => {
+    if (item.length > 1) {
+      return item.map((i) => acc[0] + i);
+    }
+    return acc.map((i) => i + item);
+  }, full[0]);
+  return full;
+}
+
+function normalizedCities(cities = citiesTable()) {
+  cities = cities.split("\n");
+  cities = cities.filter((item) => item.indexOf("市辖区") === -1);
+  const byCityFirstLetter = {};
+  for (let i = 65; i <= 90; i++) {
+    let ch = String.fromCharCode(i).toLowerCase();
+    byCityFirstLetter[ch] = [];
+  }
+  cities = cities.reduce(
+    (acc, item) => {
+      const { byAdcode, byCityCode, byCityFirstLetter } = acc;
+      const [name, adcode, citycode] = item.split("\t");
+      if (byCityCode[citycode] === undefined) {
+        const counties = [];
+        const first_letter = pinyin(name, { style: "first_letter" })[0][0];
+        const city = {
+          name,
+          first_letter,
+          pinyin: nameToPinyin(name),
+          adcode,
+          citycode,
+          counties,
+        };
+        byCityCode[citycode] = city;
+        byCityFirstLetter[first_letter].push(city);
+        byAdcode[city.adcode] = city;
+      } else {
+        const county = {
+          name,
+          adcode,
+          pinyin: nameToPinyin(name),
+        };
+        byCityCode[citycode].counties.push(county);
+        byAdcode[adcode] = county;
+      }
+      return acc;
+    },
+    { byAdcode: {}, byCityCode: {}, byCityFirstLetter }
+  );
+  return cities;
+}
+
+function writeCities() {
+  let cities = normalizedCities(citiesTable());
+  cities = JSON.stringify(cities.byCityFirstLetter, null, 2);
+  const cfile = path.join(publicDir, "cities.json");
+  const sfile = path.join(serverDir, "cities.json");
+  try {
+    fs.mkdirSync(path.dirname(cfile));
+    fs.mkdirSync(path.dirname(sfile));
+  } catch (ex) {
+    if (ex.code !== "EEXIST") throw ex;
+  }
+  fs.writeFileSync(cfile, cities);
+  fs.writeFileSync(sfile, cities);
+  console.log(
+    `fs.write ${path.relative(webDir, cfile)} and ${path.relative(
+      webDir,
+      sfile
+    )} success.`
+  );
+}
+
+writeCities.normalizedCities = normalizedCities;
+
+module.exports = writeCities;
+
+if (require.main === module) {
+  writeCities();
+}
+
+function citiesTable() {
+  return `北京市	110000	010
 北京市市辖区	110100	010
 东城区	110101	010
 西城区	110102	010
@@ -3530,137 +3661,4 @@ const citiesTable = `北京市	110000	010
 嘉模堂区	820006	1853
 路凼填海区	820007	1853
 圣方济各堂区	820008	1853`;
-
-function nameToPinyin(name) {
-  let replaced = {
-    县: "xian",
-    区: "qu",
-    地: "di",
-    家: "jia",
-    都: "du",
-    和: "he",
-    南: "nan",
-    阿: "a",
-    景: "jing",
-    大: "da",
-    繁: "fan",
-    扎: "zha",
-    省: "sheng",
-    齐: "qi",
-    伯: "bo",
-    盖: "gai",
-    宁: "ning",
-    泽: "ze",
-    甸: "dian",
-    广: "guang",
-    氏: "shi",
-    枝: "zhi",
-    若: "ruo",
-    合: "he",
-    红: "hong",
-    车: "che",
-    重: "chong",
-  };
-  const reg = new RegExp(`(?:${Object.keys(replaced).join("|")})`, "g");
-  const n = name.replace(reg, function (matched, index, string) {
-    return replaced[matched];
-  });
-  let full;
-  full = pinyin(n, {
-    style: "tone2",
-    heteronym: true,
-    segment: true,
-    group: true,
-  });
-  full = full
-    .map((i) => i.map((j) => j.replace(/\d+/g, ""))) // 去除音调
-    .map((i) =>
-      i.slice(1).reduce(
-        ([a], j) => {
-          if (a === j) return [a];
-          return [].concat(a).concat(j);
-        },
-        [i[0]]
-      )
-    );
-  const hasMultipleHeteronym = full.filter((i) => i.length > 1).length > 1;
-  if (hasMultipleHeteronym) throw new Error("There are multiple heteronym");
-  full = full.slice(1).reduce((acc, item) => {
-    if (item.length > 1) {
-      return item.map((i) => acc[0] + i);
-    }
-    return acc.map((i) => i + item);
-  }, full[0]);
-  return full;
-}
-
-function normalizedCities(cities = citiesTable) {
-  cities = cities.split("\n");
-  cities = cities.filter((item) => item.indexOf("市辖区") === -1);
-  const byCityFirstLetter = {};
-  for (let i = 65; i <= 90; i++) {
-    let ch = String.fromCharCode(i).toLowerCase();
-    byCityFirstLetter[ch] = [];
-  }
-  cities = cities.reduce(
-    (acc, item) => {
-      const { byAdcode, byCityCode, byCityFirstLetter } = acc;
-      const [name, adcode, citycode] = item.split("\t");
-      if (byCityCode[citycode] === undefined) {
-        const counties = [];
-        const first_letter = pinyin(name, { style: "first_letter" })[0][0];
-        const city = {
-          name,
-          first_letter,
-          pinyin: nameToPinyin(name),
-          adcode,
-          citycode,
-          counties,
-        };
-        byCityCode[citycode] = city;
-        byCityFirstLetter[first_letter].push(city);
-        byAdcode[city.adcode] = city;
-      } else {
-        const county = {
-          name,
-          adcode,
-          pinyin: nameToPinyin(name),
-        };
-        byCityCode[citycode].counties.push(county);
-        byAdcode[adcode] = county;
-      }
-      return acc;
-    },
-    { byAdcode: {}, byCityCode: {}, byCityFirstLetter }
-  );
-  return cities;
-}
-
-function writeCities() {
-  let cities = normalizedCities(citiesTable);
-  cities = JSON.stringify(cities.byCityFirstLetter, null, 2);
-  const cfile = path.join(publicDir, "cities.json");
-  const sfile = path.join(serverDir, "cities.json");
-  try {
-    fs.mkdirSync(path.dirname(cfile));
-    fs.mkdirSync(path.dirname(sfile));
-  } catch (ex) {
-    if (ex.code !== "EEXIST") throw ex;
-  }
-  fs.writeFileSync(cfile, cities);
-  fs.writeFileSync(sfile, cities);
-  console.log(
-    `fs.write ${path.relative(webDir, cfile)} and ${path.relative(
-      webDir,
-      sfile
-    )} success.`
-  );
-}
-
-writeCities.normalizedCities = normalizedCities;
-
-module.exports = writeCities;
-
-if (require.main === module) {
-  writeCities();
 }
