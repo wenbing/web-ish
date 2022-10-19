@@ -2,3 +2,4 @@ node_modules/
 public/
 server_lib/
 .DS_Store
+*.zip

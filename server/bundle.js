@@ -43,8 +43,16 @@ function walker(filepath) {
         throw new Error("Unknown require or import at filepath:" + filepath);
       }
     }
-    if (name.startsWith("node:")) name = name.slice("node:".length);
-    const isBuiltinModule = Module.builtinModules.includes(name);
+    if (name.startsWith("node:")) {
+      name = name.slice("node:".length);
+    }
+    let isBuiltinModule = Module.builtinModules.includes(name);
+    const slashPosition = name.indexOf("/");
+    if (slashPosition !== -1) {
+      isBuiltinModule = Module.builtinModules.includes(
+        name.slice(0, slashPosition)
+      );
+    }
     if (isBuiltinModule) return;
     let absfile;
     if (name.startsWith(".")) {
@@ -80,10 +88,11 @@ function walker(filepath) {
     deps.map((dep) => {
       const absfile = path.join(webDir, dep.relfile);
       const extname = path.extname(absfile);
-      if (extname === ".js") {
+      if (extname === ".json") return [];
+      if ([".js", ".cjs", ".mjs"].includes(extname)) {
         return walker(absfile);
       }
-      return [];
+      throw new Error("Unknown extname:" + extname + ", filepath:" + filepath);
     })
   );
 }
@@ -96,7 +105,7 @@ let nodeModules = deps
 // console.log(nodeModules);
 nodeModules = nodeModules.join(" ");
 
-const cmd = `zip -r web-ish-server.zip server/ server_lib/ public/ ${nodeModules}`;
+const cmd = `zip -r web-ish-server.zip server/ server_lib/ public/ bootstrap ${nodeModules}`;
 console.log(cmd);
 const out = execSync(cmd, { encoding: "utf8" });
 console.log(out);
