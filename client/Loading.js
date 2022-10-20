@@ -18,8 +18,10 @@ export default function Loading({ isLoading = false }) {
   const transitionDuration = duration;
   const style = { width, transitionDuration };
   return (
-    <div className="loading" style={style} onTransitionEnd={onTransitionEnd}>
-      数据加载中…
-    </div>
+    <div
+      className="loading"
+      style={style}
+      onTransitionEnd={onTransitionEnd}
+    ></div>
   );
 }

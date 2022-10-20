@@ -44,12 +44,12 @@ body > pre {
 }
 
 .loading {
-  /* display: none; */
   position: absolute;
   height: 2px;
   width: 0%;
   overflow: hidden;
   background-color: rgb(142, 202, 108);
+  color: rgb(142, 202, 108);
   margin: 0 100% 0 0;
   transition-property: width;
   transition-duration: 2s;

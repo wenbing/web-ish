@@ -1,17 +1,25 @@
 const http = require("http");
 const path = require("path");
+const { promisify } = require("util");
+const compression = require("compression");
 const serveHandler = require("serve-handler");
 const paths = require("../server/paths.js");
 const render = require("../server_lib/render.js");
 
 const { publicDir, serverlibDir, publicPath } = paths;
 const { createDoc, createError } = render;
+const compress = promisify(compression());
 
 async function handler(req, res) {
   if (req.url === "/favicon.ico") res.end();
   if (!req.url.startsWith(publicPath)) {
     throw new Error(`req.url should startsWith ${publicPath}: ${req.url}`);
   }
+
+  if (process.env.NODE_ENV === "production") {
+    await compress(req, res);
+  }
+
   const pathname =
     req.url.indexOf("?") === -1
       ? req.url
@@ -23,7 +31,11 @@ async function handler(req, res) {
     (extname === "" || extname === ".html");
   if (!isDoc) {
     req.url = req.url.slice(publicPath.length);
-    await serveHandler(req, res, { public: publicDir });
+    let serveOpts = { public: publicDir };
+    if (process.env.NODE_ENV === "production") {
+      serveOpts.etag = true;
+    }
+    await serveHandler(req, res, serveOpts);
     return;
   }
 
