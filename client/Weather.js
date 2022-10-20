@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "./Weather.css";
 let fetch;
 if (process.env.BUILD_TARGET === "web") {
   fetch = window.fetch;
@@ -21,6 +22,7 @@ const bgColors = {
   雨: "rgba(75, 89, 94, 61.8%)",
   雪: "#70dde1",
 };
+// import locator from "./locator.png";
 
 export async function fetchInfo(city) {
   if (
@@ -86,21 +88,28 @@ export default function Weather(props) {
   const infoStyle = {};
   if (city.length > 6) infoStyle.lineHeight = "1rem";
   return (
-    <div className="container">
-      <div className="block weather-block" onClick={handleClick} style={style}>
-        <span className="weather-icon">{icon}</span>
-        <span className="weather-textinfo" style={infoStyle}>
-          <span className="weather-temperature">
-            {temperature}
-            <sup>℃</sup>
-          </span>
-          <br />
-          {weather}
-          <br />
-          {/* <span className="weather-location-icon">➤</span> */}
-          {city}
+    <div className="card card-weather" onClick={handleClick} style={style}>
+      <span className="weather-icon">{icon}</span>
+      <span className="weather-textinfo" style={infoStyle}>
+        <span className="weather-temperature">
+          {temperature}
+          <sup>℃</sup>
         </span>
-      </div>
+        <br />
+        {weather}
+        <br />
+        {/* <span className="weather-location-icon">➤</span> */}
+        {/* <img
+            src={locator}
+            style={{
+              position: "relative",
+              top: "1px",
+              width: "11px",
+              height: "11px",
+            }}
+          /> */}
+        {city}
+      </span>
     </div>
   );
 }

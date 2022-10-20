@@ -2,7 +2,7 @@ import { match, publicPath } from "./routes";
 import "./Nav.css";
 
 function Nav(props) {
-  const { pathname, search, destination } = props.route;
+  const { pathname, search } = props.route;
   const handleClick = (evt) => {
     if (evt.target.tagName !== "A") {
       return;

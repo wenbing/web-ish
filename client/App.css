@@ -25,66 +25,54 @@ body > pre {
 .container {
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  align-content: flex-start;
+  flex-wrap: wrap;
 }
 
-.block {
+.card {
   flex: auto;
+  min-width: 200px;
   max-width: 200px;
   height: 80px;
   line-height: 70px;
-  margin: 10px 0;
+  margin: 10px 0 0 10px;
   border-radius: 8px;
   background-color: azure;
   text-align: center;
 }
 
-.time-block {
+.loading {
+  /* display: none; */
+  position: absolute;
+  height: 2px;
+  width: 0%;
+  overflow: hidden;
+  background-color: rgb(142, 202, 108);
+  margin: 0 100% 0 0;
+  transition-property: width;
+  transition-duration: 2s;
+  transition-timing-function: linear;
+}
+.loading:hover {
+  display: block;
+  width: 100%;
+  margin-right: 0;
+}
+
+.card-time {
   font-family: "LcdD";
   font-style: normal;
   font-size: 3rem;
   position: relative;
 }
 
-.time-block .timezone {
+.card-time .timezone {
   position: absolute;
   top: 3px;
   left: 3px;
   line-height: 1;
   font-size: 10px;
   color: darkgrey;
-}
-
-.weather-block {
-  font-size: 1rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.weather-icon {
-  font-size: 3.2rem;
-  width: 80px;
-}
-.weather-textinfo {
-  display: inline-block;
-  line-height: 1.1rem;
-  text-align: left;
-  font-size: 0.8rem;
-  width: 80px;
-}
-.weather-temperature {
-  font-size: 2rem;
-  margin-left: -1px;
-}
-.weather-block sup {
-  font-size: medium;
-  font-weight: bold;
-}
-.weather-location-icon {
-  display: inline-block;
-  transform: rotate(315deg);
-  /* translate: 2px -2px; */
-  margin-right: 2px;
-  color: #000000ba;
 }

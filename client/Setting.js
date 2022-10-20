@@ -1,6 +1,7 @@
 import { useEffect, useState, useDeferredValue, useMemo } from "react";
 import Nav from "./Nav";
-import defaultCities, { STORAGE_KEY_CITIES } from "./defaultCities";
+import Loading from "./Loading";
+import { STORAGE_KEY_CITIES } from "./defaultCities";
 import { publicPath } from "./routes";
 import "./Setting.css";
 
@@ -157,6 +158,8 @@ function Setting(props) {
   return (
     <>
       <Nav render={props.render} route={props.route}></Nav>
+      <Loading isLoading={props.isLoading}></Loading>
+
       <h2 className="setting-header">设置</h2>
       <div className="setting setting-city">
         <p>

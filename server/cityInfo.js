@@ -113,12 +113,18 @@ function writeCities() {
   cities = JSON.stringify(cities.byCityFirstLetter, null, 2);
   const cfile = path.join(publicDir, "cities.json");
   const sfile = path.join(serverDir, "cities.json");
-  try {
-    fs.mkdirSync(path.dirname(cfile));
-    fs.mkdirSync(path.dirname(sfile));
-  } catch (ex) {
-    if (ex.code !== "EEXIST") throw ex;
-  }
+  const mkdirSync = (filepath) => {
+    const rel = path.relative(webDir, path.dirname(filepath));
+    const dirs = rel
+      .split(path.sep)
+      .map((_, index, arr) => arr.slice(0, index + 1).join(path.sep))
+      .map((item) => path.join(webDir, item));
+    dirs.forEach((dir) => {
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+    });
+  };
+  mkdirSync(cfile);
+  mkdirSync(sfile);
   fs.writeFileSync(cfile, cities);
   fs.writeFileSync(sfile, cities);
   console.log(

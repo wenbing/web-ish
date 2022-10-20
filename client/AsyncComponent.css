@@ -1,11 +1,11 @@
-.block-count {
+.card-count {
   line-height: 80px;
   font-size: 20px;
   cursor: default;
   user-select: none;
 }
 
-.block-count .count {
+.card-count .count {
   min-width: 36px;
   display: inline-block;
 }

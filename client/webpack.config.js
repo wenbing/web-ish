@@ -89,7 +89,7 @@ const client = {
       stream: require.resolve("stream-browserify"),
     },
   },
-  externals,
+  // externals,
   plugins: [
     new webpack.ProvidePlugin({
       // buffer: require.resolve('buffer'),

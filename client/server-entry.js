@@ -4,8 +4,8 @@ import { Writable } from "stream";
 import React from "react";
 import { renderToPipeableStream } from "react-dom/server";
 
-import { match } from "./routes";
 import App from "./App";
+import { match } from "./routes";
 import icon from "./icon.png";
 
 export async function createError(opts) {
@@ -70,7 +70,7 @@ export async function createDoc(opts) {
   const initialData = Object.assign({}, initProps);
   let Component;
   if (route.destination) {
-    Component = await route.component;
+    Component = await route.Component;
   } else {
     Component = App;
   }
@@ -78,11 +78,11 @@ export async function createDoc(opts) {
   if (typeof Component.getInitialData === "function") {
     data = await Component.getInitialData(initProps);
   }
-  const appProps = Object.assign({}, initProps, data);
+  const props = Object.assign({}, initProps, data);
   if (route.destination) {
     Object.assign(initialData, { [route.name]: data });
   }
-  const app = <Component {...appProps} />;
+  const app = <Component {...props} />;
   const content = await new Promise((resolve, reject) => {
     let body = "";
     const writable = new Writable({
@@ -142,7 +142,9 @@ export async function createDoc(opts) {
   </head>
   <body>
     <div id="app">${content}</div>
-    <script>window.INITIAL_DATA = ${JSON.stringify(initialData)}</script>
+    <script>
+window.INITIAL_DATA = ${JSON.stringify(initialData, null, 2)}
+    </script>
     ${assets.body.join("\n\t")}
   </body>
 </html>

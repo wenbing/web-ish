@@ -1,11 +1,11 @@
 .nav {
   display: flex;
-  background-color: azure;
+  align-content: center;
+  background-color: #a9df7662;
   margin: 0;
   padding-left: 0;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
   list-style: none;
+  height: 48px;
 }
 .nav .nav-item {
   flex: auto;
@@ -16,6 +16,8 @@
   text-align: right;
 }
 .nav .nav-item > a {
+  display: block;
+  line-height: 48px;
   transition: text-decoration 0.5s ease-out;
 }
 .nav .nav-item > a,

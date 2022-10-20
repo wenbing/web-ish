@@ -6,7 +6,7 @@ function AsyncCompnent() {
   const theme = useContext(App.ThemeContext);
   const [count, setCount] = useState(0);
   return (
-    <div className="block block-count">
+    <div className="card card-count">
       <div
         className={`theme-${theme.name}`}
         onClick={() => setCount(count + 1)}

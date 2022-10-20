@@ -1,23 +1,23 @@
-export const publicPath = require("./publicPath");
+export const publicPath = "/web-ish";
 
 export const routes = [
   {
     name: "app",
     source: /^\/(?:index(?:\.html)?)?(?:\/)?$/i,
     destination: "/index.html",
-    component: import("./App").then((m) => m.default),
+    Component: import("./App").then((m) => m.default),
   },
   {
     name: "mine",
     source: /^\/(?:mine(?:\.html)?)?(?:\/)?$/i,
     destination: "/mine.html",
-    component: import("./App").then((m) => m.default),
+    Component: import("./App").then((m) => m.default),
   },
   {
     name: "setting",
     source: /^\/setting(?:\.html)?(?:\/)?$/i,
     destination: "/setting.html",
-    component: import(
+    Component: import(
       /* webpackPrefetch:true, webpackChunkName: 'setting' */ "./Setting"
     ).then((m) => m.default),
   },

@@ -1,6 +1,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import "./App.css";
 import Nav from "./Nav";
+import Loading from "./Loading";
 import DateCard from "./DateCard";
 import Weather, { fetchInfo } from "./Weather";
 import defaultCities, { STORAGE_KEY_CITIES } from "./defaultCities";
@@ -47,26 +48,27 @@ export default function App(props) {
   return (
     <>
       <Nav render={props.render} route={props.route}></Nav>
+      <Loading isLoading={props.isLoading}></Loading>
 
-      {!isMine && <DateCard date={props.date}></DateCard>}
+      <div className="container">
+        {!isMine && <DateCard date={props.date}></DateCard>}
 
-      {adcodes.map((adcode, index) => (
-        <Weather
-          key={adcode}
-          city={adcode}
-          lives={lives.find((item) => item.adcode === adcode)}
-        ></Weather>
-      ))}
+        {adcodes.map((adcode, index) => (
+          <Weather
+            key={adcode}
+            city={adcode}
+            lives={lives.find((item) => item.adcode === adcode)}
+          ></Weather>
+        ))}
 
-      {!isMine && (
-        <div className="container">
+        {!isMine && (
           <ThemeContext.Provider value={themes.dark}>
             <Suspense fallback={<div>加载中...</div>}>
               <AsyncCompnent />
             </Suspense>
           </ThemeContext.Provider>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }
