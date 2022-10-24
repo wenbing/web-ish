@@ -5,13 +5,10 @@ const cp = require("child_process");
 
 const clientWebpackConfig = require("../client/webpack.config");
 const serverWebpackConfig = require("./webpack.config");
-const {
-  cwd,
-  webDir,
-  publicDir,
-  serverlibDir,
-  publicPath,
-} = require("../server/paths.js");
+const { publicPath } = require("../client/paths.js");
+const dirs = require("../server/dirs.js");
+const { cwd, webDir, serverlibDir } = dirs;
+const publicDir = dirs.publicDir(publicPath);
 
 async function writeDoc({ pathname }) {
   const { createDoc } = require("../server_lib/render");

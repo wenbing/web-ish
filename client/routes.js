@@ -1,4 +1,6 @@
-export const publicPath = "/web-ish";
+import paths from "../client/paths.js";
+
+export const { publicPath } = paths;
 
 export const routes = [
   {

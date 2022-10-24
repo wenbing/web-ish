@@ -8,6 +8,8 @@ import App from "./App";
 import { match } from "./routes";
 import icon from "./icon.png";
 
+export { publicPath } from "./paths";
+
 export async function createError(opts) {
   const { error, serverlibDir, publicDir, url } = opts;
   const stats = JSON.parse(

@@ -1,7 +1,10 @@
 const fs = require("fs");
 const path = require("path");
 const pinyin = require("pinyin").default;
-const { webDir, publicDir, serverDir } = require("../server/paths.js");
+const dirs = require("../server/dirs.js");
+const { publicPath } = require("../client/paths.js");
+const { webDir, serverDir } = dirs;
+const publicDir = dirs.publicDir(publicPath);
 
 function nameToPinyin(name) {
   let replaced = {

@@ -4,7 +4,7 @@ const Module = require("module");
 const acorn = require("acorn");
 const walk = require("acorn-walk");
 const findPackageJSON = require("find-package-json");
-const { webDir, serverDir } = require("./paths.js");
+const { webDir, serverDir } = require("./dirs.js");
 const { execSync } = require("child_process");
 
 function walker(filepath) {
@@ -85,14 +85,17 @@ function walker(filepath) {
   });
   return [].concat.apply(
     deps,
-    deps.map((dep) => {
-      const absfile = path.join(webDir, dep.relfile);
+    deps.map(({ relfile }) => {
+      const absfile = path.join(webDir, relfile);
       const extname = path.extname(absfile);
       if (extname === ".json") return [];
+      if (relfile.startsWith("client/")) {
+        throw new Error("Unsupported kind of dep, relfile: " + relfile);
+      }
       if ([".js", ".cjs", ".mjs"].includes(extname)) {
         return walker(absfile);
       }
-      throw new Error("Unknown extname:" + extname + ", filepath:" + filepath);
+      throw new Error("Unknown extname:" + extname + ", filepath:" + relfile);
     })
   );
 }

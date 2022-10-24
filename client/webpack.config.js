@@ -6,13 +6,10 @@ const StatsWriterPlugin = require("../server/StatsWriterPlugin");
 const setupMiddlewares = require("../server/setupMiddlewares");
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
-const {
-  cwd,
-  webDir,
-  publicDir,
-  serverlibDir,
-  publicPath,
-} = require("../server/paths.js");
+const { publicPath, outputPublicPath } = require("../client/paths.js");
+const dirs = require("../server/dirs.js");
+const { cwd, serverlibDir } = dirs;
+const publicDir = dirs.publicDir(publicPath);
 
 const jsRule = [
   {
@@ -49,12 +46,9 @@ const entry = {
 };
 const output = {
   path: publicDir,
-  publicPath:
-    process.env.NODE_ENV === "production" && process.env.GITHUB_PAGES === "true"
-      ? `https://wenbing.github.io${publicPath}/`
-      : `${publicPath}/`,
   filename: "[name].js",
   chunkFilename: "[name].js",
+  publicPath: outputPublicPath,
 };
 const miniCssOpts = { filename: "[name].css", chunkFilename: "[name].css" };
 if (mode === "production") {
@@ -130,16 +124,4 @@ module.exports = client;
 
 if (require.main === module) {
   console.log(module.exports);
-}
-
-function externals(o, cb) {
-  // o.request startsWith: / ./ ../ \w+|@, aka. filepath or modulename
-  if (o.request.startsWith("/") || o.request.startsWith(".")) {
-    const r = path.resolve(o.context, o.request);
-    const isServerModules = path.relative(webDir, r).startsWith("server/");
-    if (isServerModules) {
-      return cb(null, `node-commonjs ${o.request}`);
-    }
-  }
-  return cb();
 }

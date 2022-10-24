@@ -3,15 +3,19 @@ const path = require("path");
 const { promisify } = require("util");
 const compression = require("compression");
 const serveHandler = require("serve-handler");
-const paths = require("../server/paths.js");
+const dirs = require("../server/dirs.js");
 const render = require("../server_lib/render.js");
 
-const { publicDir, serverlibDir, publicPath } = paths;
-const { createDoc, createError } = render;
+const { serverlibDir } = dirs;
+const { publicPath, createDoc, createError } = render;
+const publicDir = dirs.publicDir(publicPath);
 const compress = promisify(compression());
 
 async function handler(req, res) {
-  if (req.url === "/favicon.ico") res.end();
+  if (req.url === "/favicon.ico") {
+    res.end();
+    return;
+  }
   if (!req.url.startsWith(publicPath)) {
     throw new Error(`req.url should startsWith ${publicPath}: ${req.url}`);
   }
@@ -73,6 +77,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(8000, function () {
+const port = process.env.NODE_ENV === "production" ? 8000 : 3000;
+server.listen(port, function () {
   console.log(`server is listening at ${JSON.stringify(this.address())}`);
 });
