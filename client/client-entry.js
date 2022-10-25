@@ -1,82 +1,57 @@
-import React, { useState } from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
 
-import App from "./App";
-import { match, publicPath } from "./routes";
+import "./client.css";
+import { match, publicPath } from "./routes.mjs";
 import icon from "./icon.png";
-if (process.env.NODE_ENV === "development") {
+
+const searchParams = new URLSearchParams(location.search);
+if (process.env.NODE_ENV === "development" && searchParams.has("istest")) {
   import("./tape-test");
 }
 const INITIAL_DATA = window.INITIAL_DATA;
-
-function Bootstrap({ Component, isLoading, ...props }) {
-  return <Component isLoading={isLoading} {...props} />;
-}
 
 (async function main() {
   async function init() {
     const route = match(
       `${publicPath}${INITIAL_DATA.route.pathname}${INITIAL_DATA.route.search}`
     );
-    const initProps = {
-      favicon: icon,
+    const Component = await route.Component();
+    let props = {
       builtAt: INITIAL_DATA.builtAt,
-      route: INITIAL_DATA.route,
-    };
-    if (INITIAL_DATA.isStatic !== undefined) {
-      initProps.isStatic = INITIAL_DATA.isStatic;
-    }
-    let Component;
-    let data;
-    if (route.destination) {
-      Component = await route.Component;
-      data = INITIAL_DATA[route.name];
-    } else {
-      Component = App;
-      data = await Component.getInitialData(initProps);
-    }
-    const props = Object.assign({}, initProps, data, {
+      isStatic: INITIAL_DATA.isStatic,
+      favicon: icon,
+      route: { ...INITIAL_DATA.route, Component },
       render: handleRender,
-    });
+    };
+    const data = { ...INITIAL_DATA[route.name] };
+    props = { ...data, ...props };
     console.log("init props", JSON.stringify(props, null, 2));
     return [Component, props];
   }
 
-  async function update({ pathname, search }) {
-    const route = match(`${pathname}${search}`);
-    let Component;
-    let initProps = {
-      favicon: icon,
+  async function update(loc) {
+    const route = match(`${loc.pathname}${loc.search}`);
+    const Component = await route.Component();
+    let props = {
       builtAt: INITIAL_DATA.builtAt,
-      route: {
-        pathname: route.pathname,
-        search: route.search,
-        destination: route.destination,
-      },
+      isStatic: INITIAL_DATA.isStatic,
+      favicon: icon,
+      route: { ...route, Component },
+      render: handleRender,
     };
-    if (INITIAL_DATA.isStatic !== undefined) {
-      initProps.isStatic = INITIAL_DATA.isStatic;
-    }
-    let name;
-    if (route.destination) {
-      Component = await route.Component;
-      name = route.name;
-    } else {
-      Component = App;
-      name = "app";
-    }
     let data;
     if (typeof Component.getInitialData === "function") {
       try {
-        data = await Component.getInitialData(initProps);
+        data = await Component.getInitialData(props);
       } catch (ex) {
         console.error(ex);
+        data = { ...INITIAL_DATA[route.name] };
       }
-      data = Object.assign({}, INITIAL_DATA[name], data);
+    } else {
+      data = { ...INITIAL_DATA[route.name] };
     }
-    const props = Object.assign({}, initProps, data, {
-      render: handleRender,
-    });
+    props = { ...data, ...props };
     console.log("update Props", JSON.stringify(props, null, 2));
     return [Component, props];
   }

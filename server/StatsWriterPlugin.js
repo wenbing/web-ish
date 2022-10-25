@@ -10,8 +10,11 @@ class StatsWriterPlugin {
         builtAt: true,
         publicPath: true,
         entrypoints: true,
+        // chunks: true,
+        chunkGroups: true,
         chunkGroupAuxiliary: true,
         chunkGroupChildren: true,
+        // groupAssetsByChunk: true,
       },
     };
     const filepath = path.resolve(outputPath, this.opts.filename);

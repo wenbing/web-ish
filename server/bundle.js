@@ -100,15 +100,61 @@ function walker(filepath) {
   );
 }
 
-const entrypoint = path.join(serverDir, "server.js");
-const deps = walker(entrypoint);
-let nodeModules = deps
-  .filter(({ relfile }) => relfile.startsWith("node_modules/"))
-  .map(({ relfile }) => relfile);
-// console.log(nodeModules);
-nodeModules = nodeModules.join(" ");
+function zipFiles() {
+  const entrypoint = path.join(serverDir, "server.js");
+  const deps = walker(entrypoint);
+  let nodeModules = deps
+    .filter(({ relfile }) => relfile.startsWith("node_modules/"))
+    .map(({ relfile }) => relfile);
+  // console.log(nodeModules);
+  nodeModules = nodeModules.join(" ");
 
-const cmd = `zip -r web-ish-server.zip server/ server_lib/ public/ bootstrap ${nodeModules}`;
-console.log(cmd);
-const out = execSync(cmd, { encoding: "utf8" });
-console.log(out);
+  const cmd = `zip -r web-ish-server.zip server/ server_lib/ public/ bootstrap ${nodeModules}`;
+  // console.log(cmd);
+  const out = execSync(cmd, { encoding: "utf8" });
+  return out;
+}
+
+async function uploadZipFile() {
+  const core = require("@huaweicloud/huaweicloud-sdk-core");
+  const functiongraph = require("@huaweicloud/huaweicloud-sdk-functiongraph");
+
+  const credentialsFile = process.env["HUAWEICLOUD_CREDENTIALS"];
+  if (credentialsFile === undefined) {
+    throw new Error('Please supplies process.env["HUAWEICLOUD_CREDENTIALS"]');
+  }
+  const secrets = fs
+    .readFileSync(credentialsFile, "utf-8")
+    .split("\n")[1]
+    .split(",");
+  const [_, ak, sk] = secrets;
+  const endpoint = "https://functiongraph.cn-north-4.myhuaweicloud.com";
+  const project_id = "68c2079e0a504fb080c24c9c65070ccd";
+
+  const credentials = new core.BasicCredentials()
+    .withAk(ak)
+    .withSk(sk)
+    .withProjectId(project_id);
+  const client = functiongraph.FunctionGraphClient.newBuilder()
+    .withCredential(credentials)
+    .withEndpoint(endpoint)
+    .build();
+  const request = new functiongraph.ImportFunctionRequest();
+  const body = new functiongraph.ImportFunctionRequestBody();
+  const filename = "web-ish-server.zip";
+  body.withFileCode(fs.readFileSync(`./${filename}`).toString("base64"));
+  body.withFileType("zip");
+  body.withFileName(filename);
+  body.withFuncName("web-ish");
+  request.withBody(body);
+  const result = await client.importFunction(request);
+  if (result.status !== 200) {
+    const ex = new Error(result.message);
+    ex.raw = result;
+    throw ex;
+  }
+  return result;
+}
+
+console.log(zipFiles());
+// console.log(uploadZipFile());

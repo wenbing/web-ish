@@ -1,4 +1,11 @@
-import paths from "../client/paths.js";
+import paths from "./paths.js";
+const notfound = {
+  name: "404",
+  Component: () =>
+    import(/* webpackChunkName: 'notfound' */ "./NotFound.mjs").then(
+      (m) => m.default
+    ),
+};
 
 export const { publicPath } = paths;
 
@@ -7,21 +14,24 @@ export const routes = [
     name: "app",
     source: /^\/(?:index(?:\.html)?)?(?:\/)?$/i,
     destination: "/index.html",
-    Component: import("./App").then((m) => m.default),
+    Component: () =>
+      import(/* webpackChunkName: 'app' */ "./App.js").then((m) => m.default),
   },
   {
     name: "mine",
     source: /^\/(?:mine(?:\.html)?)?(?:\/)?$/i,
     destination: "/mine.html",
-    Component: import("./App").then((m) => m.default),
+    Component: () =>
+      import(/* webpackChunkName: 'app' */ "./App.js").then((m) => m.default),
   },
   {
     name: "setting",
     source: /^\/setting(?:\.html)?(?:\/)?$/i,
     destination: "/setting.html",
-    Component: import(
-      /* webpackPrefetch:true, webpackChunkName: 'setting' */ "./Setting"
-    ).then((m) => m.default),
+    Component: () =>
+      import(/* webpackChunkName: 'setting' */ "./Setting.js").then(
+        (m) => m.default
+      ),
   },
 ];
 
@@ -32,7 +42,7 @@ export function match(url) {
       ? [url, ""]
       : [url.slice(0, searchPosition), url.slice(searchPosition)];
   if (!pathname.startsWith(publicPath)) {
-    return { pathname, search, destination: null };
+    return { ...notfound, pathname, search, destination: null };
   }
   const striped = pathname.slice(publicPath.length);
   const len = routes.length;
@@ -40,8 +50,15 @@ export function match(url) {
     const route = routes[i];
     const matched = striped.match(route.source);
     if (matched) {
-      return Object.assign({}, route, { pathname: striped, search });
+      return {
+        name: route.name,
+        // source: route.source,
+        destination: route.destination,
+        Component: route.Component,
+        pathname: striped,
+        search,
+      };
     }
   }
-  return { pathname: striped, search, destination: null };
+  return { ...notfound, pathname: striped, search, destination: null };
 }

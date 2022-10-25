@@ -1,19 +1,19 @@
 {
   "dependencies": {
     "compression": "^1.7.4",
+    "minimatch": "^3.1.2",
     "node-fetch": "^3.2.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "serve-handler": "^6.1.3"
-  },
-  "scripts": {
-    "start": "webpack -w"
   },
   "devDependencies": {
     "@babel/core": "^7.19.1",
     "@babel/preset-env": "^7.19.1",
     "@babel/preset-react": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
+    "@huaweicloud/huaweicloud-sdk-core": "^3.1.5",
+    "@huaweicloud/huaweicloud-sdk-functiongraph": "^3.1.5",
     "acorn": "^8.8.0",
     "acorn-walk": "^8.2.0",
     "babel-loader": "^8.2.5",
@@ -24,7 +24,6 @@
     "find-package-json": "^1.2.0",
     "mini-css-extract-plugin": "^2.6.1",
     "path-browserify": "^1.0.1",
-    "pinyin": "^3.0.0-alpha.5",
     "prettier": "^2.7.1",
     "process": "^0.11.10",
     "serve": "^14.0.1",
@@ -34,5 +33,8 @@
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.11.1"
+  },
+  "optionalDependencies": {
+    "pinyin": "^3.0.0-alpha.5"
   }
 }

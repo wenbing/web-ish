@@ -12,18 +12,12 @@ const publicDir = dirs.publicDir(publicPath);
 
 async function writeDoc({ pathname }) {
   const { createDoc } = require("../server_lib/render");
-  let doc;
-  try {
-    doc = await createDoc({
-      serverlibDir,
-      publicDir,
-      url: `${publicPath}${pathname}`,
-      isStatic: true,
-    });
-  } catch (ex) {
-    console.error("writeDoc met", ex.stack);
-    return;
-  }
+  const doc = await createDoc({
+    serverlibDir,
+    publicDir,
+    url: `${publicPath}${pathname}`,
+    isStatic: true,
+  });
   const filename = pathname.endsWith("/") ? `${pathname}index.html` : pathname;
   const filepath = path.join(publicDir, filename.slice(1));
   try {
@@ -75,10 +69,9 @@ function parseArgv() {
 }
 
 function cpCitiesJSON() {
-  const cmd = `cp ${path.relative(
-    cwd,
-    path.join(webDir, "server/cities.json")
-  )} ${path.relative(cwd, path.join(publicDir, "cities.json"))}`;
+  const source = path.relative(cwd, path.join(webDir, "server/cities.json"));
+  const dest = path.relative(cwd, path.join(publicDir, "cities.json"));
+  const cmd = `cp ${source} ${dest}`;
   console.log(cmd);
-  cp.execSync(cmd);
+  return cp.execSync(cmd);
 }

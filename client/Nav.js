@@ -1,15 +1,18 @@
-import { match, publicPath } from "./routes";
+import { match, publicPath } from "./routes.mjs";
 import "./Nav.css";
 
 function Nav(props) {
   const { pathname, search } = props.route;
-  const handleClick = (evt) => {
+  const handleClick = async (evt) => {
     if (evt.target.tagName !== "A") {
       return;
     }
-    evt.preventDefault();
     const loc = new URL(evt.target.href);
     const route = match(`${loc.pathname}${loc.search}`);
+    if (props.route.Component !== (await route.Component())) {
+      return;
+    }
+    evt.preventDefault();
     const shouldReplace =
       route &&
       route.destination === props.route.destination &&

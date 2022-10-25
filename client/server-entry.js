@@ -4,8 +4,7 @@ import { Writable } from "stream";
 import React from "react";
 import { renderToPipeableStream } from "react-dom/server";
 
-import App from "./App";
-import { match } from "./routes";
+import { match } from "./routes.mjs";
 import icon from "./icon.png";
 
 export { publicPath } from "./paths";
@@ -23,16 +22,14 @@ export async function createError(opts) {
     fileSystem: opts.fs || fs,
   });
   const route = match(url);
+  const { pathname, search, destination } = route;
   const initProps = {
     builtAt,
     favicon: icon,
-    route: {
-      pathname: route.pathname,
-      search: route.search,
-      destination: route.destination,
-    },
+    route: { pathname, search, destination },
   };
-  const initialData = Object.assign({}, initProps);
+  let initialData = { ...initProps };
+  initialData = JSON.stringify(initialData);
   const title = "Error!";
   const doc = `<!doctype html>
 <html>
@@ -44,7 +41,7 @@ export async function createError(opts) {
   </head>
   <body>
     <pre id="error-stack">${error.stack}</pre>
-    <script>window.INITIAL_DATA = ${JSON.stringify(initialData)}</script>
+    <script>window.INITIAL_DATA = ${initialData}</script>
     ${assets.body.join("\n\t\t")}
   </body>
 </html>
@@ -59,31 +56,21 @@ export async function createDoc(opts) {
   );
   const { builtAt, publicPath } = stats;
   const route = match(url);
-  const initProps = {
+  let { Component } = route;
+  Component = await route.Component();
+  const getProps = () => ({
     builtAt,
-    favicon: icon,
     isStatic,
-    route: {
-      pathname: route.pathname,
-      destination: route.destination,
-      search: route.search,
-    },
-  };
-  const initialData = Object.assign({}, initProps);
-  let Component;
-  if (route.destination) {
-    Component = await route.Component;
-  } else {
-    Component = App;
-  }
+    favicon: icon,
+    route: { ...route, Component },
+  });
   let data;
   if (typeof Component.getInitialData === "function") {
-    data = await Component.getInitialData(initProps);
+    data = await Component.getInitialData(getProps());
   }
-  const props = Object.assign({}, initProps, data);
-  if (route.destination) {
-    Object.assign(initialData, { [route.name]: data });
-  }
+  let initialData = { ...getProps(), [route.name]: data };
+  initialData = JSON.stringify(initialData, null, 2);
+  const props = { ...data, ...getProps() };
   const app = <Component {...props} />;
   const content = await new Promise((resolve, reject) => {
     let body = "";
@@ -104,26 +91,16 @@ export async function createDoc(opts) {
       },
     });
   });
-  const clientStats = stats.entrypoints.client;
-  let clientAssets = clientStats.assets;
-  // route.name webpackChunkName webpackPrefetch 相符合，可以加载到html中
-  if (route && clientStats.children.prefetch) {
-    const prefetchByName = clientStats.children.prefetch.reduce(
-      (acc, item) => Object.assign(acc, { [item.name]: item }),
-      {}
-    );
-    if (prefetchByName[route.name]) {
-      clientAssets = clientAssets.concat(prefetchByName[route.name].assets);
-    }
-  }
-  if (clientStats.children.preload) {
+  const { namedChunkGroups } = stats;
+  let clientAssets = namedChunkGroups.client.assets;
+  // Component.name.toLowerCase() webpackChunkName 相符合，可以加载到html中
+  const webpackChunkName = Component.name.toLowerCase();
+  if (namedChunkGroups[webpackChunkName]) {
     clientAssets = clientAssets.concat(
-      clientStats.children.preload.reduce(
-        (acc, item) => acc.concat(item.assets),
-        []
-      )
+      namedChunkGroups[webpackChunkName].assets
     );
   }
+
   const assets = getAssets({
     assets: clientAssets,
     publicDir,
@@ -145,7 +122,7 @@ export async function createDoc(opts) {
   <body>
     <div id="app">${content}</div>
     <script>
-window.INITIAL_DATA = ${JSON.stringify(initialData, null, 2)}
+window.INITIAL_DATA = ${initialData}
     </script>
     ${assets.body.join("\n\t")}
   </body>
@@ -168,7 +145,9 @@ function getAssets({ assets, publicDir, publicPath, fileSystem }) {
           const style = fileSystem
             .readFileSync(path.join(publicDir, item.name))
             .toString();
-          acc.header.push(`<style>${style}</style>`);
+          acc.header.push(
+            `<style data-href="${publicPath}${item.name}">${style}</style>`
+          );
           // acc.header.push(`<link rel="stylesheet" href="${publicPath}${item.name}" />`)
           break;
         default:

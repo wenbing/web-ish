@@ -95,6 +95,7 @@ const client = {
   ],
   stats: { logging: "info" },
 };
+
 if (mode === "development") {
   client.devtool = "eval-source-map";
   client.devServer = {
@@ -105,17 +106,17 @@ if (mode === "development") {
     devMiddleware: { publicPath },
   };
 } else if (mode === "production") {
-  client.optimization = {
-    moduleIds: "deterministic",
-    splitChunks: {
-      cacheGroups: {
-        ["react-dom"]: {
-          test: /[\\/]node_modules[\\/]react-dom[\\/]/,
-          name: "react-dom",
-          chunks: "all",
-        },
-      },
+  const cacheGroups = {
+    ["react-dom"]: {
+      chunks: "all",
+      enforce: true,
+      test: /[\\/]node_modules[\\/]react-dom[\\/]/,
+      name: "react-dom",
     },
+  };
+  client.optimization = {
+    splitChunks: { cacheGroups },
+    moduleIds: "deterministic",
     minimizer: ["...", new CssMinimizerPlugin()],
   };
 }

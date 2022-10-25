@@ -2,7 +2,7 @@ import { useEffect, useState, useDeferredValue, useMemo } from "react";
 import Nav from "./Nav";
 import Loading from "./Loading";
 import { STORAGE_KEY_CITIES } from "./defaultCities";
-import { publicPath } from "./routes";
+import { publicPath } from "./routes.mjs";
 import "./Setting.css";
 
 // cities, items, byFirstLetter, byPinyin, byAdcode, byName

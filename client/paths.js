@@ -10,6 +10,8 @@ if (process.env.NODE_ENV === "production") {
   } else {
     outputPublicPath = `${publicPath}/`;
   }
+} else {
+  outputPublicPath = `${publicPath}/`;
 }
 
 module.exports = { publicPath, outputPublicPath };

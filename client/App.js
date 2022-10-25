@@ -13,9 +13,7 @@ const themes = {
 const ThemeContext = React.createContext(themes.light);
 
 const AsyncCompnent = React.lazy(() =>
-  import(/* webpackPreload:true */ "./AsyncComponent.css").then(() =>
-    import(/* webpackChunkName: 'async-component' */ "./AsyncComponent")
-  )
+  import(/* webpackChunkName: 'async-component' */ "./AsyncComponent.js")
 );
 
 export default function App(props) {
