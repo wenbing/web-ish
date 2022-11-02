@@ -1,3 +1,4 @@
+const fs = require("fs");
 const path = require("path");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { DefinePlugin } = require("webpack");
@@ -5,6 +6,33 @@ const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 const { webDir, serverlibDir } = require("../server/dirs.js");
 const { outputPublicPath } = require("../client/paths.js");
+
+class ServerStatsWriterPlugin {
+  constructor() {
+    this.opts = {
+      filename: "server-stats.json",
+      stats: {
+        preset: "none",
+        builtAt: true,
+        publicPath: true,
+        chunkGroups: true, // namedChunkGroups
+      },
+    };
+  }
+  apply(compiler) {
+    compiler.hooks.done.tap("server-stats-writer-plugin", (stats) => {
+      let result = stats.toJson(this.opts.stats);
+      const { builtAt, publicPath, namedChunkGroups } = result;
+      result = { builtAt, publicPath, namedChunkGroups };
+      const content = JSON.stringify(result, null, 2);
+      const filepath = path.join(
+        compiler.options.output.path,
+        this.opts.filename
+      );
+      compiler.outputFileSystem.writeFileSync(filepath, content);
+    });
+  }
+}
 
 const jsRule = [
   {
@@ -54,6 +82,7 @@ const output = {
   path: serverlibDir,
   library: { type: "commonjs2" },
   publicPath: outputPublicPath,
+  iife: false,
 };
 const server = {
   mode,
@@ -64,7 +93,11 @@ const server = {
   },
   output,
   module: { rules: jsRule.concat(serverCssRule).concat(assetRule) },
-  plugins: [new MiniCssExtractPlugin(), new DefinePlugin(defines)],
+  plugins: [
+    new MiniCssExtractPlugin(),
+    new DefinePlugin(defines),
+    new ServerStatsWriterPlugin(),
+  ],
   externals,
   externalsType: "node-commonjs",
   optimization: { moduleIds: "named", chunkIds: "named", minimize: false },

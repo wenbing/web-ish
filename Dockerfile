@@ -12,6 +12,7 @@ ENV NODE_ENV=production
 EXPOSE 8000
 
 WORKDIR /web-ish-server
-COPY . .
+COPY package*.json ./
 RUN npm i
+COPY . .
 CMD ./bootstrap

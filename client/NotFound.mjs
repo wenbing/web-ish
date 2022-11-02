@@ -1,4 +1,3 @@
-import path from "path";
 import Nav from "./Nav.js";
 import Loading from "./Loading.js";
 
@@ -14,10 +13,4 @@ export default function NotFound(props) {
       Not Found
     </>
   );
-}
-
-export const chunkName = getChunkName(import.meta.url);
-
-function getChunkName(uri) {
-  return path.basename(uri, path.extname(uri)).toLowerCase();
 }

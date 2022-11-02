@@ -4,7 +4,7 @@ const Module = require("module");
 const acorn = require("acorn");
 const walk = require("acorn-walk");
 const findPackageJSON = require("find-package-json");
-const { webDir, serverDir } = require("./dirs.js");
+const { webDir, serverDir, serverlibDir } = require("./dirs.js");
 const { execSync } = require("child_process");
 
 function walker(filepath) {
@@ -101,18 +101,29 @@ function walker(filepath) {
 }
 
 function zipFiles() {
-  const deps = [].concat(
-    walker(path.join(serverDir, "server.js")),
-    // TODO visit webpackChunkNames
-    walker(path.join(serverDir, "config-wx.js"))
+  const serverFile = path.join(serverDir, "server.js");
+  const { namedChunkGroups } = require("../server_lib/server-stats.json");
+  const filenames = Object.keys(namedChunkGroups)
+    .reduce((acc, key) => acc.concat(namedChunkGroups[key].assets), [])
+    .map((item) => item.name);
+  const chunkFiles = filenames.map((name) => path.join(serverlibDir, name));
+  const files = [serverFile].concat(chunkFiles);
+  const deps = [].concat.apply(
+    [],
+    files.map((file) => walker(file))
   );
   let nodeModules = deps
     .filter(({ relfile }) => relfile.startsWith("node_modules/"))
     .map(({ relfile }) => relfile);
-  // console.log(nodeModules);
+  console.log(nodeModules.length);
+  nodeModules = Object.keys(
+    nodeModules.reduce((acc, item) => {
+      acc[item] = (acc[item] || 0) + 1;
+      return acc;
+    }, {})
+  );
   nodeModules = nodeModules.join(" ");
-
-  const cmd = `zip -r web-ish-server.zip server server_lib public bootstrap ${nodeModules}`;
+  const cmd = `zip -r web-ish-server.zip package*.json server server_lib public bootstrap ${nodeModules}`;
   // console.log(cmd);
   const out = execSync(cmd, { encoding: "utf8" });
   return out;
