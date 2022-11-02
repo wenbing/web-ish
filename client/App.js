@@ -5,71 +5,105 @@ import Loading from "./Loading";
 import DateCard from "./DateCard";
 import Weather, { fetchInfo } from "./Weather";
 import defaultCities, { STORAGE_KEY_CITIES } from "./defaultCities";
+import withErrorBoundary from "./withErrorBoundary.mjs";
 
 const themes = {
   light: { name: "light", foreground: "#000000", background: "#eeeeee" },
   dark: { name: "dark", foreground: "#ffffff", background: "#222222" },
 };
 const ThemeContext = React.createContext(themes.light);
-
 const AsyncCompnent = React.lazy(() =>
   import(/* webpackChunkName: 'async-component' */ "./AsyncComponent.js")
 );
 
-export default function App(props) {
+function Default(props) {
   const [adcodes, setAdcodes] = useState(props.adcodes);
   const [lives, setLives] = useState(props.lives);
-  const isMine = props.route.destination === "/mine.html";
   useEffect(() => {
     (async () => {
-      if (isMine) {
-        let data = localStorage.getItem(STORAGE_KEY_CITIES);
-        if (data) {
-          const keys = JSON.parse(data).map(({ adcode }) => adcode);
-          const infos = await Promise.all(keys.map((city) => fetchInfo(city)));
-          setLives(infos);
-          setAdcodes(keys);
-          return;
-        }
-      }
-      if (!isMine && props.isStatic) {
+      if (props.isStatic) {
         const keys = props.adcodes;
         const infos = await Promise.all(keys.map((city) => fetchInfo(city)));
         setLives(infos);
         setAdcodes(keys);
-        return;
+      } else {
+        setLives(props.lives);
+        setAdcodes(props.adcodes);
       }
-      setLives(props.lives);
-      setAdcodes(props.adcodes);
     })();
   }, [props.route]);
   return (
-    <>
-      <Nav render={props.render} route={props.route}></Nav>
-      <Loading isLoading={props.isLoading}></Loading>
+    <div className="cards">
+      <DateCard date={props.date}></DateCard>
 
-      <div className="container">
-        {!isMine && <DateCard date={props.date}></DateCard>}
+      {adcodes.map((adcode, index) => (
+        <Weather
+          key={adcode}
+          city={adcode}
+          lives={lives.find((item) => item.adcode === adcode)}
+        ></Weather>
+      ))}
 
-        {adcodes.map((adcode, index) => (
-          <Weather
-            key={adcode}
-            city={adcode}
-            lives={lives.find((item) => item.adcode === adcode)}
-          ></Weather>
-        ))}
-
-        {!isMine && (
-          <ThemeContext.Provider value={themes.dark}>
-            <Suspense fallback={<div>加载中...</div>}>
-              <AsyncCompnent />
-            </Suspense>
-          </ThemeContext.Provider>
-        )}
-      </div>
-    </>
+      <ThemeContext.Provider value={themes.dark}>
+        <Suspense fallback={<div>加载中...</div>}>
+          <AsyncCompnent />
+        </Suspense>
+      </ThemeContext.Provider>
+    </div>
   );
 }
+
+function Mine(props) {
+  const [adcodes, setAdcodes] = useState(props.adcodes);
+  const [lives, setLives] = useState(props.lives);
+  useEffect(() => {
+    (async () => {
+      let data = localStorage.getItem(STORAGE_KEY_CITIES);
+      if (data) {
+        const keys = JSON.parse(data).map(({ adcode }) => adcode);
+        const infos = await Promise.all(keys.map((city) => fetchInfo(city)));
+        setLives(infos);
+        setAdcodes(keys);
+      } else {
+        setLives(props.lives);
+        setAdcodes(props.adcodes);
+      }
+    })();
+  }, [props.route]);
+  return (
+    <div className="cards">
+      {adcodes.map((adcode, index) => (
+        <Weather
+          key={adcode}
+          city={adcode}
+          lives={lives.find((item) => item.adcode === adcode)}
+        ></Weather>
+      ))}
+    </div>
+  );
+}
+
+const App = withErrorBoundary((props) => {
+  const { isLoading, render, route, headers, error } = props;
+  const loading = <Loading isLoading={isLoading}></Loading>;
+  const nav = <Nav {...{ render, route, headers, error }}></Nav>;
+  let contents;
+  if (props.error) {
+    contents = <div className="container">Error!</div>;
+  } else {
+    const isMine = props.route.destination === "/mine.html";
+    contents = isMine ? <Mine {...props} /> : <Default {...props} />;
+  }
+  return (
+    <>
+      {loading}
+      {nav}
+      {contents}
+    </>
+  );
+});
+
+App.ThemeContext = ThemeContext;
 
 App.getInitialData = async (props) => {
   const isMine = props.route.destination === "/mine.html";
@@ -78,4 +112,4 @@ App.getInitialData = async (props) => {
   return { date: Date.now(), adcodes, lives };
 };
 
-App.ThemeContext = ThemeContext;
+export default App;

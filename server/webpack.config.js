@@ -3,7 +3,7 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { DefinePlugin } = require("webpack");
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
-const { cwd, webDir, serverlibDir } = require("../server/dirs.js");
+const { webDir, serverlibDir } = require("../server/dirs.js");
 const { outputPublicPath } = require("../client/paths.js");
 
 const jsRule = [
@@ -60,9 +60,7 @@ const server = {
   target,
   devtool: false,
   entry: {
-    render:
-      "./" +
-      path.relative(cwd, path.resolve(__dirname, "../client/server-entry.js")),
+    render: path.resolve(__dirname, "../client/server-entry.mjs"),
   },
   output,
   module: { rules: jsRule.concat(serverCssRule).concat(assetRule) },
@@ -84,10 +82,21 @@ function externals(o, cb) {
     const r = path.resolve(o.context, o.request);
     const isServerModules = path.relative(webDir, r).startsWith("server/");
     if (isServerModules) {
-      return cb(null, `node-commonjs ${o.request}`);
+      cb(null, `node-commonjs ${o.request}`);
+    } else {
+      cb();
     }
-    return cb();
   } else {
-    return cb(null, `node-commonjs ${o.request}`);
+    const absfile = require.resolve(o.request);
+    const extname = path.extname(absfile);
+    // extname .js .mjs .cjs .css
+    if ([".js", ".cjs", ".mjs"].includes(extname)) {
+      cb(null, `node-commonjs ${o.request}`);
+    } else if ([".css"].includes(extname)) {
+      const relfile = path.relative(webDir, absfile);
+      cb(null, `var ${JSON.stringify([o.request, relfile])}`);
+    } else {
+      cb();
+    }
   }
 }

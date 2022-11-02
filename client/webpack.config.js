@@ -8,7 +8,7 @@ const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 const { publicPath, outputPublicPath } = require("../client/paths.js");
 const dirs = require("../server/dirs.js");
-const { cwd, serverlibDir } = dirs;
+const { serverlibDir } = dirs;
 const publicDir = dirs.publicDir(publicPath);
 
 const jsRule = [
@@ -40,9 +40,8 @@ const assetRule = [
   },
 ];
 const entry = {
-  client:
-    "./" + path.relative(cwd, path.resolve(__dirname, "./client-entry.js")),
-  error: "./" + path.relative(cwd, path.resolve(__dirname, "./error-entry.js")),
+  client: path.resolve(__dirname, "./client-entry.js"),
+  error: path.resolve(__dirname, "./error-entry.js"),
 };
 const output = {
   path: publicDir,
@@ -100,7 +99,9 @@ if (mode === "development") {
   client.devtool = "eval-source-map";
   client.devServer = {
     hot: true,
-    port: 3000,
+    // port: 3000,
+    port: 80,
+    allowedHosts: [".zhengwenbing.com"],
     setupMiddlewares,
     static: { directory: publicDir, publicPath },
     devMiddleware: { publicPath },

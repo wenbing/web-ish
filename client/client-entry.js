@@ -1,9 +1,9 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
 
 import "./client.css";
 import { match, publicPath } from "./routes.mjs";
 import icon from "./icon.png";
+import React from "react";
 
 const searchParams = new URLSearchParams(location.search);
 if (process.env.NODE_ENV === "development" && searchParams.has("istest")) {
@@ -18,15 +18,14 @@ const INITIAL_DATA = window.INITIAL_DATA;
     );
     const Component = await route.Component();
     let props = {
-      builtAt: INITIAL_DATA.builtAt,
-      isStatic: INITIAL_DATA.isStatic,
+      ...INITIAL_DATA,
       favicon: icon,
       route: { ...INITIAL_DATA.route, Component },
       render: handleRender,
     };
     const data = { ...INITIAL_DATA[route.name] };
-    props = { ...data, ...props };
-    console.log("init props", JSON.stringify(props, null, 2));
+    props = { ...props, ...data };
+    console.log("init props", props);
     return [Component, props];
   }
 
@@ -34,31 +33,30 @@ const INITIAL_DATA = window.INITIAL_DATA;
     const route = match(`${loc.pathname}${loc.search}`);
     const Component = await route.Component();
     let props = {
-      builtAt: INITIAL_DATA.builtAt,
-      isStatic: INITIAL_DATA.isStatic,
+      ...INITIAL_DATA,
       favicon: icon,
       route: { ...route, Component },
       render: handleRender,
     };
-    let data;
+    let data = { ...INITIAL_DATA[route.name] };
+    props = { ...props, ...data };
     if (typeof Component.getInitialData === "function") {
       try {
         data = await Component.getInitialData(props);
       } catch (ex) {
         console.error(ex);
-        data = { ...INITIAL_DATA[route.name] };
       }
     } else {
-      data = { ...INITIAL_DATA[route.name] };
+      // @TODO
     }
-    props = { ...data, ...props };
-    console.log("update Props", JSON.stringify(props, null, 2));
+    props = { ...props, ...data };
+    console.log("update props", props);
     return [Component, props];
   }
 
+  const container = document.getElementById("app");
   let Component;
   let props;
-  const container = document.getElementById("app");
   [Component, props] = await init();
   const root = ReactDOM.hydrateRoot(container, <Component {...props} />);
   async function handleRender(loc) {

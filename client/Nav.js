@@ -12,6 +12,9 @@ function Nav(props) {
     if (props.route.Component !== (await route.Component())) {
       return;
     }
+    if (props.error) {
+      return;
+    }
     evt.preventDefault();
     const shouldReplace =
       route &&
@@ -25,38 +28,33 @@ function Nav(props) {
     props.render(loc);
   };
 
+  const inWeixin =
+    props.headers["x-requested-with"] === "com.tencent.mm" ||
+    props.headers["user-agent"].match(/\swechatdevtools\//) !== null;
+  let items = [
+    { label: "Home", href: "/index.html" },
+    { label: "Mine", href: "/mine.html" },
+    { label: "Weixin", href: "/weixin", filter: () => inWeixin },
+    { label: "Setting", href: "/setting.html" },
+  ];
+  items = items.filter((item) => {
+    if (typeof item.filter === "function") return item.filter();
+    return true;
+  });
+  items = items.map((item) => {
+    const className =
+      `${pathname}${search}` === item.href ? "nav-link-current" : "";
+    return { ...item, className };
+  });
   return (
     <ul className="nav" onClick={handleClick}>
-      <li className="nav-item">
-        <a
-          className={
-            `${pathname}${search}` === "/index.html" ? "nav-link-current" : ""
-          }
-          href={`${publicPath}/index.html`}
-        >
-          Home
-        </a>
-      </li>
-      <li className="nav-item">
-        <a
-          className={
-            `${pathname}${search}` === "/mine.html" ? "nav-link-current" : ""
-          }
-          href={`${publicPath}/mine.html`}
-        >
-          Mine
-        </a>
-      </li>
-      <li className="nav-item">
-        <a
-          className={
-            `${pathname}${search}` === "/setting.html" ? "nav-link-current" : ""
-          }
-          href={`${publicPath}/setting.html`}
-        >
-          Setting
-        </a>
-      </li>
+      {items.map((item) => (
+        <li className="nav-item" key={item.label}>
+          <a className={item.className} href={`${publicPath}${item.href}`}>
+            {item.label}
+          </a>
+        </li>
+      ))}
     </ul>
   );
 }

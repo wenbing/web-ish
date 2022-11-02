@@ -7,17 +7,23 @@ const clientWebpackConfig = require("../client/webpack.config");
 const serverWebpackConfig = require("./webpack.config");
 const { publicPath } = require("../client/paths.js");
 const dirs = require("../server/dirs.js");
-const { cwd, webDir, serverlibDir } = dirs;
+const { webDir, serverlibDir } = dirs;
 const publicDir = dirs.publicDir(publicPath);
 
 async function writeDoc({ pathname }) {
   const { createDoc } = require("../server_lib/render");
-  const doc = await createDoc({
-    serverlibDir,
-    publicDir,
-    url: `${publicPath}${pathname}`,
+  const url = `${publicPath}${pathname}`;
+  const initials = {
+    url,
     isStatic: true,
-  });
+    headers: {
+      ["x-forwarded-proto"]: "http",
+      "x-requested-with": "",
+      "user-agent": "",
+    },
+  };
+  const opts = { serverlibDir, publicDir };
+  const doc = await createDoc(initials, opts);
   const filename = pathname.endsWith("/") ? `${pathname}index.html` : pathname;
   const filepath = path.join(publicDir, filename.slice(1));
   try {
@@ -69,8 +75,8 @@ function parseArgv() {
 }
 
 function cpCitiesJSON() {
-  const source = path.relative(cwd, path.join(webDir, "server/cities.json"));
-  const dest = path.relative(cwd, path.join(publicDir, "cities.json"));
+  const source = path.join(webDir, "server/cities.json");
+  const dest = path.join(publicDir, "cities.json");
   const cmd = `cp ${source} ${dest}`;
   console.log(cmd);
   return cp.execSync(cmd);

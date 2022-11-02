@@ -1,32 +1,27 @@
-.card-weather {
-  font-size: 1rem;
-  display: flex;
+.weather-info {
+  display: inline-flex;
+  align-items: flex-start;
   justify-content: center;
-  align-items: center;
 }
-.card-weather sup {
-  font-size: medium;
-  font-weight: bold;
+.weather-icon,
+.weather-text {
+  display: inline-block;
 }
 .weather-icon {
-  font-size: 3.2rem;
   width: 80px;
+  font-size: 3.2rem;
+  text-align: center;
 }
-.weather-textinfo {
-  display: inline-block;
+.weather-text {
   width: 100px;
-  line-height: 1.1rem;
   text-align: left;
   font-size: 12px;
 }
 .weather-temperature {
-  font-size: 2rem;
+  font-size: 1.5rem;
   margin-left: -1px;
 }
-.weather-location-icon {
-  display: inline-block;
-  transform: rotate(315deg);
-  /* translate: 2px -2px; */
-  margin-right: 2px;
-  color: #000000ba;
+
+.weather-temperature sup {
+  font-size: 12px;
 }

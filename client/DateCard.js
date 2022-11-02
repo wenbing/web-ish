@@ -6,9 +6,7 @@ function DateCard(props) {
     const intervalID = setInterval(() => {
       setDate(Date.now());
     }, 1000);
-    return () => {
-      clearInterval(intervalID);
-    };
+    return () => clearInterval(intervalID);
   });
   let time;
   if (date) {
@@ -27,10 +25,10 @@ function DateCard(props) {
     time = "08:00:00";
   }
   return (
-    <h2 className="card card-time">
+    <div className="card card-time">
       <span className="timezone">Beijing</span>
-      <span className="lcdd-font">{time}</span>
-    </h2>
+      <span className="lcdd-font countdown">{time}</span>
+    </div>
   );
 }
 

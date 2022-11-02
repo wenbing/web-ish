@@ -1,11 +1,13 @@
 .card-count {
-  line-height: 80px;
   font-size: 20px;
   cursor: default;
   user-select: none;
+  min-height: 72px;
+  line-height: 72px;
 }
 
 .card-count .count {
   min-width: 36px;
   display: inline-block;
+  text-align: center;
 }

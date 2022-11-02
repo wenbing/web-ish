@@ -10,13 +10,13 @@ const setupMiddlewares = (middlewares, devServer) => {
   const logger = devServer.compiler.getInfrastructureLogger(middlewareName);
   const clientCompiler = devServer.compiler;
   const outputFileSystem = clientCompiler.outputFileSystem;
-  const publicDir = clientCompiler.outputPath;
+  // const publicDir = clientCompiler.outputPath;
   const serverCompiler = webpack(serverWebpackConfig);
   const serverlibDir = serverCompiler.outputPath;
 
   let serverCompilerInvalid = null;
   serverCompiler.hooks.invalid.tap(middlewareName, (filename, changeTime) => {
-    if (filename.endsWith("server-entry.js"))
+    if (filename.endsWith("server-entry.mjs"))
       serverCompilerInvalid = path.relative(clientCompiler.context, filename);
   });
   serverCompiler.watch({}, function handleWatchRun(err, stats) {
@@ -35,38 +35,37 @@ const setupMiddlewares = (middlewares, devServer) => {
   });
 
   const middleware = async (req, res, next) => {
-    const pathname =
-      req.url.indexOf("?") === -1
-        ? req.url
-        : req.url.slice(0, req.url.indexOf("?"));
-    const extname = path.extname(pathname);
-    const isDoc =
-      req.headers.accept &&
-      req.headers.accept.indexOf("text/html") !== -1 &&
-      (extname === "" || extname === ".html");
-    if (!isDoc) {
-      return next();
-    }
     logger.info(req.method, req.url);
     const renderPath = require.resolve(`${serverlibDir}/render`);
+    const handlerPath = require.resolve("./handler");
+    clearRequireCache(handlerPath);
     clearRequireCache(renderPath);
-    const { createDoc, createError } = require(renderPath);
-    const opts = {
-      serverlibDir,
-      publicDir,
-      url: req.url,
-      fs: outputFileSystem,
-    };
+
+    const render = require(renderPath);
+    const { publicPath } = render;
+    if (!req.url.startsWith(publicPath)) {
+      return next();
+    }
+    const handlers = require(handlerPath);
+    const { isDoc, isApi, reqHandler } = handlers;
+    const is = { doc: isDoc(req), api: isApi(req, res, { publicPath }) };
+    if (!(is.doc || is.api)) {
+      return next();
+    }
     try {
-      const doc = await createDoc(opts);
-      res.end(doc);
+      await reqHandler(req, res, { render, logger, fs: outputFileSystem });
     } catch (ex) {
-      const exDoc = await createError(Object.assign({}, opts, { error: ex }));
-      res.writeHead(500, http.STATUS_CODES[500]);
-      res.end(exDoc);
+      logger.error(ex.stack);
+      res.setHeader("Content-Type", is.doc ? "text/html" : "application/json");
+      const statusCode = ex.statusCode || 500;
+      res.writeHead(statusCode, http.STATUS_CODES[statusCode]);
+      const body = is.doc
+        ? ex.message
+        : JSON.stringify({ code: ex.code || -1, message: ex.message });
+      res.end(body);
     }
   };
-  middlewares.push({ name: middlewareName, middleware });
+  middlewares.unshift({ name: middlewareName, middleware });
   return middlewares;
 };
 

@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Weather.css";
-let fetch;
-if (process.env.BUILD_TARGET === "web") {
-  fetch = window.fetch;
-}
-if (process.env.BUILD_TARGET === "node") {
-  fetch = (...args) =>
-    import("../server/fetch.js").then((m) => m.default(...args));
-}
+import fetch from "./fetch.js";
 const icons = {
   晴: "☀️",
   云: "☁️",
@@ -15,12 +8,12 @@ const icons = {
   雨: "🌧",
   雪: "❄️",
 };
-const bgColors = {
-  晴: "rgba(255, 233, 99, 61.8%)",
-  云: "#bdf7ff",
-  阴: "rgba(189, 247, 255, 61.8%)",
-  雨: "rgba(75, 89, 94, 61.8%)",
-  雪: "#70dde1",
+const classNames = {
+  晴: "sunny",
+  云: "cloudy",
+  阴: "overcast",
+  雨: "rainy",
+  雪: "snowy",
 };
 // import locator from "./locator.png";
 
@@ -84,32 +77,27 @@ export default function Weather(props) {
     wkey = "晴";
   }
   const icon = icons[wkey];
-  const style = { backgroundColor: bgColors[wkey] };
+  const className = classNames[wkey];
   const infoStyle = {};
   if (city.length > 6) infoStyle.lineHeight = "1rem";
   return (
-    <div className="card card-weather" onClick={handleClick} style={style}>
-      <span className="weather-icon">{icon}</span>
-      <span className="weather-textinfo" style={infoStyle}>
-        <span className="weather-temperature">
-          {temperature}
-          <sup>℃</sup>
-        </span>
-        <br />
-        {weather}
-        <br />
-        {/* <span className="weather-location-icon">➤</span> */}
-        {/* <img
-            src={locator}
-            style={{
-              position: "relative",
-              top: "1px",
-              width: "11px",
-              height: "11px",
-            }}
-          /> */}
-        {city}
-      </span>
+    <div
+      className={"card card-weather card-weather-" + className}
+      onClick={handleClick}
+    >
+      <div className="weather-info">
+        <div className="weather-icon">{icon}</div>
+        <div className="weather-text" style={infoStyle}>
+          <span className="weather-temperature">
+            {temperature}
+            <sup>℃</sup>
+          </span>
+          <br />
+          {weather}
+          <br />
+          {city}
+        </div>
+      </div>
     </div>
   );
 }

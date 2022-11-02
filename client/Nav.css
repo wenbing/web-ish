@@ -1,30 +1,37 @@
 .nav {
   display: flex;
   align-content: center;
-  background-color: #a9df7662;
+  background-color: var(--nav-bg-color);
   margin: 0;
   padding-left: 0;
   list-style: none;
   height: 48px;
 }
+
 .nav .nav-item {
   flex: auto;
   max-width: 80px;
 }
+
 .nav .nav-item:last-child {
   margin-left: auto;
   text-align: right;
 }
+
 .nav .nav-item > a {
   display: block;
   line-height: 48px;
   transition: text-decoration 0.5s ease-out;
+  text-align: center;
+  color: var(--font-color);
 }
+
 .nav .nav-item > a,
 .nav .nav-item > a:visited,
 .nav .nav-item > a:active {
   text-decoration: none;
 }
+
 .nav .nav-item > a:hover,
 .nav .nav-item > a.nav-link-current {
   text-decoration: underline;

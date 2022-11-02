@@ -157,8 +157,12 @@ function Setting(props) {
 
   return (
     <>
-      <Nav render={props.render} route={props.route}></Nav>
       <Loading isLoading={props.isLoading}></Loading>
+      <Nav
+        render={props.render}
+        route={props.route}
+        headers={props.headers}
+      ></Nav>
 
       <h2 className="setting-header">设置</h2>
       <div className="setting setting-city">

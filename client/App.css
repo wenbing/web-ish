@@ -1,8 +1,10 @@
 .card-time {
   font-family: "LcdD";
   font-style: normal;
-  font-size: 3rem;
+  font-size: 3.2rem;
   position: relative;
+  display: block;
+  width: 190px;
 }
 
 .card-time .timezone {
@@ -12,4 +14,8 @@
   line-height: 1;
   font-size: 10px;
   color: darkgrey;
+}
+
+.card-time .countdown {
+  margin-left: 8px;
 }

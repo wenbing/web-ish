@@ -4,21 +4,26 @@ import { Writable } from "stream";
 import React from "react";
 import { renderToPipeableStream } from "react-dom/server";
 
-import { match } from "./routes.mjs";
 import icon from "./icon.png";
 
-export { publicPath } from "./paths";
+export { publicPath } from "./paths.js";
 
-export async function createError(opts) {
-  const { error, serverlibDir, publicDir, url } = opts;
+function importRoutes() {
+  return import(/* webpackChunkName:'routes' */ "./routes.mjs");
+}
+
+export async function createError(initials, opts) {
+  const { match } = await importRoutes();
+  const { url, error } = initials;
+  const { serverlibDir, publicDir } = opts;
   const stats = JSON.parse(
     fs.readFileSync(path.join(serverlibDir, "stats.json")).toString()
   );
-  const { builtAt, publicPath } = stats;
+  const { builtAt } = stats;
   const assets = getAssets({
-    assets: stats.entrypoints.error.assets,
+    assets: stats.namedChunkGroups.error.assets,
     publicDir,
-    publicPath,
+    publicPath: stats.publicPath,
     fileSystem: opts.fs || fs,
   });
   const route = match(url);
@@ -26,6 +31,7 @@ export async function createError(opts) {
   const initProps = {
     builtAt,
     favicon: icon,
+    ...initials,
     route: { pathname, search, destination },
   };
   let initialData = { ...initProps };
@@ -49,21 +55,36 @@ export async function createError(opts) {
   return doc;
 }
 
-export async function createDoc(opts) {
-  const { serverlibDir, publicDir, url, isStatic } = opts;
+async function getRouteMods({ routeMods }) {
+  const mods = routeMods;
+  const { routes, notfound } = await importRoutes();
+  await Promise.all(
+    routes.map(async (item, index) => {
+      mods[index].Component = await item.Component();
+    })
+  );
+  mods[mods.length - 1].Component = await notfound.Component();
+  return mods;
+}
+
+export async function createDoc(initials, opts) {
+  const { match } = await importRoutes();
+  const { serverlibDir, publicDir } = opts;
+  const { url, isStatic, ...restInitials } = initials;
   const stats = JSON.parse(
     fs.readFileSync(path.join(serverlibDir, "stats.json")).toString()
   );
-  const { builtAt, publicPath } = stats;
+  const { builtAt } = stats;
   const route = match(url);
   let { Component } = route;
   Component = await route.Component();
-  const getProps = () => ({
-    builtAt,
-    isStatic,
-    favicon: icon,
-    route: { ...route, Component },
-  });
+  const getProps = () =>
+    Object.assign(
+      { builtAt, favicon: icon, url },
+      isStatic === true ? { isStatic } : null,
+      restInitials,
+      { route: { ...route, Component } }
+    );
   let data;
   if (typeof Component.getInitialData === "function") {
     data = await Component.getInitialData(getProps());
@@ -91,24 +112,25 @@ export async function createDoc(opts) {
       },
     });
   });
+
   const { namedChunkGroups } = stats;
   let clientAssets = namedChunkGroups.client.assets;
-  // Component.name.toLowerCase() webpackChunkName 相符合，可以加载到html中
-  const webpackChunkName = Component.name.toLowerCase();
-  if (namedChunkGroups[webpackChunkName]) {
+  const routeMods = await getRouteMods(stats);
+  const mod = routeMods.find((item) => item.Component === Component);
+  if (namedChunkGroups[mod.webpackChunkName]) {
     clientAssets = clientAssets.concat(
-      namedChunkGroups[webpackChunkName].assets
+      namedChunkGroups[mod.webpackChunkName].assets
     );
   }
 
   const assets = getAssets({
     assets: clientAssets,
     publicDir,
-    publicPath,
+    publicPath: stats.publicPath,
     fileSystem: opts.fs || fs,
   });
 
-  const title = "Labs";
+  const title = Component.title || "Labs in the garden";
   const doc = `<!doctype html>
 <html>
   <head>
@@ -142,13 +164,18 @@ function getAssets({ assets, publicDir, publicPath, fileSystem }) {
           }
           break;
         case ".css":
-          const style = fileSystem
-            .readFileSync(path.join(publicDir, item.name))
-            .toString();
-          acc.header.push(
-            `<style data-href="${publicPath}${item.name}">${style}</style>`
-          );
-          // acc.header.push(`<link rel="stylesheet" href="${publicPath}${item.name}" />`)
+          if (item.size > 100000) {
+            acc.header.push(
+              `<link rel="stylesheet" href="${publicPath}${item.name}" />`
+            );
+          } else {
+            const style = fileSystem
+              .readFileSync(path.join(publicDir, item.name))
+              .toString();
+            acc.header.push(
+              `<style data-href="${publicPath}${item.name}">${style}</style>`
+            );
+          }
           break;
         default:
           break;
