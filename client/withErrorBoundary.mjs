@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import hoistNonReactStatic from "hoist-non-react-statics";
 
 export default (Component) => {

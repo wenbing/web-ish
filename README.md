@@ -18,3 +18,12 @@
   "server": "node server/server.js"
 }
 ```
+
+## Features Set
+
+- minimal codebase, minimal dependencies
+- server side initial data and client side incremental updated data,
+  based on a route component, and a familiar data structure: props
+- unified html rendering, include development pages, static pages and server pages
+- unified single page application and multiple pages application
+- general available server request handler, easily to integrate

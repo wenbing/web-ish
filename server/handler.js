@@ -1,3 +1,4 @@
+const fs = require("fs");
 const path = require("path");
 const http = require("http");
 const serveHandler = require("serve-handler");
@@ -5,7 +6,7 @@ const jwt = require("jsonwebtoken");
 
 const dirs = require("../server/dirs.js");
 const { serverlibDir } = dirs;
-const secret = "aplzCqGXY5sao#iLJ8UN2Pl8!1l*dMR#";
+const secret = process.env.API_TOKEN_SECRET;
 
 function pick(o, keys) {
   return keys.reduce((acc, key) => {

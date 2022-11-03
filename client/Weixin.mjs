@@ -38,7 +38,7 @@ function promisifyWX(wx, funcName) {
     promisified[funcName] = (opts) =>
       new Promise((resolve, reject) => {
         const success = (res) => resolve(res);
-        const fail = (res) => resolve(res.errMsg);
+        const fail = (res) => resolve(res);
         func({ ...opts, success, fail });
       });
   }
@@ -57,9 +57,8 @@ export default function Weixin(props) {
         const wx = await configWX(props);
         const getLocation = promisifyWX(wx, "getLocation");
         const wgsLatlng = await getLocation({ type: "wgs84" });
-        const gcjLatlng = await getLocation({ type: "wgs84" });
-        const { latitude, longitude } = wgsLatlng;
-        setLatlng({ latitude, longitude });
+        setLatlng(wgsLatlng);
+        // const gcjLatlng = await getLocation({ type: "wgs84" });
 
         const updateMsgShare = promisifyWX(wx, "updateAppMessageShareData");
         const result = await updateMsgShare({
@@ -85,32 +84,32 @@ export default function Weixin(props) {
       <div className="article weui-article" style={{ margin: "5px" }}>
         {inWeixin && <h2>Wei xin</h2>}
         <p>inWeixin: {inWeixin ? "true" : "false"}</p>
-        {inWeixin
-          ? [
-              <p key="latlng">latlng: {JSON.stringify(latlng)}</p>,
-              <p key="msgShare">msgShare: {JSON.stringify(msgShare)}</p>,
-            ]
-          : [
-              <p key="url">url:{href}</p>,
-              <p key="title" style={{ marginBottom: 0 }}>
-                scan qrcode with wechat to visit.
-              </p>,
-              <p key="urlQRCode" style={{ marginTop: 0 }}>
-                <img
-                  src={props.urlQRCode}
-                  alt={href}
-                  title="scan qrcode with wechat to visit"
-                />
-              </p>,
-            ]}
+        {inWeixin ? (
+          <>
+            <pre>latlng: {JSON.stringify(latlng)}</pre>
+            <pre>msgShare: {JSON.stringify(msgShare)}</pre>
+          </>
+        ) : (
+          <>
+            <p>url:{href}</p>
+            <p style={{ marginBottom: 0 }}>scan qrcode with wechat to visit.</p>
+            <p style={{ marginTop: 0 }}>
+              <img
+                src={props.urlQRCode}
+                alt={href}
+                title="scan qrcode with wechat to visit"
+              />
+            </p>
+          </>
+        )}
       </div>
     </>
   );
 }
 
-Weixin.getInitialData = async (props) => {
-  const inWeixin = getInWeixin(props);
-  if (process.env.BUILD_TARGET === "node") {
+if (process.env.BUILD_TARGET === "node") {
+  Weixin.getInitialData = async (props) => {
+    const inWeixin = getInWeixin(props);
     const { url, headers } = props;
     const href = ` ${headers["x-forwarded-proto"]}://${headers.host}${url}`;
     const urlQRCode = await require("qrcode").toDataURL(href, {
@@ -122,10 +121,5 @@ Weixin.getInitialData = async (props) => {
     const wxc = require("../server/config-wx.js");
     const jsapi_config = await wxc.wxConfig(props);
     return { urlQRCode, appId, jsapi_config };
-  } else {
-    const { urlQRCode } = props;
-    if (!inWeixin) return { urlQRCode };
-    const { appId, jsapi_config } = props;
-    return { urlQRCode, appId, jsapi_config };
-  }
-};
+  };
+}
