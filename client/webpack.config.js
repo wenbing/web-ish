@@ -2,8 +2,8 @@ const path = require("path");
 const webpack = require("webpack");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
-const StatsWriterPlugin = require("../server/StatsWriterPlugin");
-const setupMiddlewares = require("../server/setupMiddlewares");
+const StatsWriterPlugin = require("../server/StatsWriterPlugin.js");
+const setupMiddlewares = require("../server/setupMiddlewares.js");
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 const { publicPath, outputPublicPath } = require("../client/paths.js");

@@ -4,7 +4,7 @@ const compression = require("compression");
 
 const compress = promisify(compression());
 const render = require("../server_lib/render.js");
-const { isDoc, isApi, reqHandler } = require("./handler");
+const { isDoc, isApi, reqHandler } = require("./handler.js");
 
 const server = http.createServer(async (req, res) => {
   const logger = console;

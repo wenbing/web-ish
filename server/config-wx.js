@@ -1,5 +1,5 @@
 const Hashes = require("jshashes");
-const fetch = require("./fetch");
+const fetch = require("./fetch.js");
 
 async function wxConfig(props) {
   const { headers } = props;

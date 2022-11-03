@@ -1,4 +1,6 @@
-.*
+.DS_Store
+.git
+.github
+.gitignore
 Dockerfile
-client/
-node_modules/
+node_modules

@@ -1,18 +1,24 @@
-FROM alpine:3.13
-
-# 使用 HTTPS 协议访问容器云调用证书安装
-# RUN apk add ca-certificates
-
-# 选用国内镜像源以提高下载速度
-
+FROM alpine:3.13 AS BUILD
 RUN sed -i "s@dl-cdn.alpinelinux.org@repo.huaweicloud.com@g" /etc/apk/repositories \
     && apk add --update --no-cache nodejs npm
+WORKDIR /web-ish-build
+COPY package*.json .npmrc ./
+RUN npm i
+COPY client client
+COPY server server 
+COPY bootstrap bootstrap 
+RUN NODE_ENV=production node server/build.js
 
+FROM alpine:3.13
+RUN sed -i "s@dl-cdn.alpinelinux.org@repo.huaweicloud.com@g" /etc/apk/repositories \
+    && apk add --update --no-cache nodejs npm
 ENV NODE_ENV=production
 EXPOSE 8000
-
 WORKDIR /web-ish-server
-COPY package*.json ./
+COPY --from=BUILD /web-ish-build/package*.json /web-ish-build/.npmrc ./
 RUN npm i
-COPY . .
+COPY --from=BUILD /web-ish-build/public public
+COPY --from=BUILD /web-ish-build/server_lib server_lib
+COPY --from=BUILD /web-ish-build/server server
+COPY --from=BUILD /web-ish-build/bootstrap bootstrap
 CMD ./bootstrap

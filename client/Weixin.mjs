@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "weui";
+// import "weui";
 import Nav from "./Nav.js";
 import Loading from "./Loading.js";
 
@@ -46,6 +46,7 @@ function promisifyWX(wx, funcName) {
 }
 
 export default function Weixin(props) {
+  const { url, headers } = props;
   const inWeixin = getInWeixin(props);
   const [latlng, setLatlng] = useState({});
   const [msgShare, setMsgShare] = useState(null);
@@ -72,6 +73,7 @@ export default function Weixin(props) {
     },
     [props.appId, props.route]
   );
+  const href = ` ${headers["x-forwarded-proto"]}://${headers.host}${url}`;
   return (
     <>
       <Loading isLoading={props.isLoading}></Loading>
@@ -80,11 +82,27 @@ export default function Weixin(props) {
         route={props.route}
         headers={props.headers}
       ></Nav>
-      <div className="article weui-article">
+      <div className="article weui-article" style={{ margin: "5px" }}>
         {inWeixin && <h2>Wei xin</h2>}
         <p>inWeixin: {inWeixin ? "true" : "false"}</p>
-        <p>latlng: {JSON.stringify(latlng)}</p>
-        <p>msgShare: {JSON.stringify(msgShare)}</p>
+        {inWeixin
+          ? [
+              <p key="latlng">latlng: {JSON.stringify(latlng)}</p>,
+              <p key="msgShare">msgShare: {JSON.stringify(msgShare)}</p>,
+            ]
+          : [
+              <p key="url">url:{href}</p>,
+              <p key="title" style={{ marginBottom: 0 }}>
+                scan qrcode with wechat to visit.
+              </p>,
+              <p key="urlQRCode" style={{ marginTop: 0 }}>
+                <img
+                  src={props.urlQRCode}
+                  alt={href}
+                  title="scan qrcode with wechat to visit"
+                />
+              </p>,
+            ]}
       </div>
     </>
   );
@@ -92,15 +110,22 @@ export default function Weixin(props) {
 
 Weixin.getInitialData = async (props) => {
   const inWeixin = getInWeixin(props);
-  if (!inWeixin) {
-    return {};
-  }
-  const appId = "wxc6f6f01560d25b57";
-  let jsapi_config;
   if (process.env.BUILD_TARGET === "node") {
-    jsapi_config = await require("../server/config-wx.js").wxConfig(props);
+    const { url, headers } = props;
+    const href = ` ${headers["x-forwarded-proto"]}://${headers.host}${url}`;
+    const urlQRCode = await require("qrcode").toDataURL(href, {
+      margin: 0,
+      scale: 6,
+    });
+    if (!inWeixin) return { urlQRCode };
+    const appId = "wxc6f6f01560d25b57";
+    const wxc = require("../server/config-wx.js");
+    const jsapi_config = await wxc.wxConfig(props);
+    return { urlQRCode, appId, jsapi_config };
   } else {
-    jsapi_config = props.jsapi_config;
+    const { urlQRCode } = props;
+    if (!inWeixin) return { urlQRCode };
+    const { appId, jsapi_config } = props;
+    return { urlQRCode, appId, jsapi_config };
   }
-  return { appId, jsapi_config };
 };

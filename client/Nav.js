@@ -28,13 +28,10 @@ function Nav(props) {
     props.render(loc);
   };
 
-  const inWeixin =
-    props.headers["x-requested-with"] === "com.tencent.mm" ||
-    props.headers["user-agent"].match(/\swechatdevtools\//) !== null;
   let items = [
     { label: "Home", href: "/index.html" },
     { label: "Mine", href: "/mine.html" },
-    { label: "Weixin", href: "/weixin", filter: () => inWeixin },
+    { label: "Weixin", href: "/weixin" },
     { label: "Setting", href: "/setting.html" },
   ];
   items = items.filter((item) => {
