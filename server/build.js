@@ -7,6 +7,7 @@ const clientWebpackConfig = require("../client/webpack.config.js");
 const serverWebpackConfig = require("./webpack.config.js");
 const { publicPath } = require("../client/paths.js");
 const dirs = require("../server/dirs.js");
+const { get } = require("http");
 const { webDir, serverlibDir } = dirs;
 const publicDir = dirs.publicDir(publicPath);
 
@@ -17,9 +18,10 @@ async function writeDoc({ pathname }) {
     url,
     isStatic: true,
     headers: {
-      ["x-forwarded-proto"]: "http",
-      "x-requested-with": "",
+      "x-forwarded-proto": "https",
+      host: "wenbing.github.io",
       "user-agent": "",
+      "x-requested-with": "",
     },
   };
   const opts = { serverlibDir, publicDir };
@@ -43,16 +45,27 @@ if (require.main === module) {
   // return;
 
   const compiler = webpack([clientWebpackConfig, serverWebpackConfig]);
-  compiler.run((err, stats) => {
+  compiler.run(async (err, stats) => {
     if (err) throw err;
     if (stats.hasErrors()) throw new Error(stats.toString({ colors: true }));
     console.log(stats.toString({ colors: true }));
     cpCitiesJSON();
     const cliOpts = parseArgv();
-    (cliOpts.pathname || []).forEach((pathname) => {
-      writeDoc({ pathname });
-    });
+    const pathnames = await getStaticPathnames(cliOpts);
+    pathnames.forEach((pathname) => writeDoc({ pathname }));
   });
+}
+
+async function getStaticPathnames(cliOpts) {
+  let pathnames = [];
+  if (cliOpts.pathname === "all") {
+    const { importRoutes } = require("../server_lib/render.js");
+    const { routes, notfound } = await importRoutes();
+    return [].concat(routes, notfound).map(({ destination }) => destination);
+  } else {
+    pathnames = [].concat(cliOpts.pathname);
+  }
+  return pathnames;
 }
 
 function parseArgv() {
@@ -68,7 +81,9 @@ function parseArgv() {
       while (items.length > 0 && !items[items.length - 1].startsWith("--")) {
         val.push(items.pop());
       }
-      args[key] = val;
+      if (val.length > 0) {
+        args[key] = val.length === 1 ? val[0] : val;
+      }
     }
   }
   return args;

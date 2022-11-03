@@ -6,7 +6,10 @@ const jwt = require("jsonwebtoken");
 
 const dirs = require("../server/dirs.js");
 const { serverlibDir } = dirs;
-const secret = process.env.API_TOKEN_SECRET;
+let credentials = process.env.WENBING_CREDENTIALS_FILE;
+if (fs.existsSync(credentials))
+  credentials = fs.readFileSync(credentials, "utf8");
+const secret = JSON.parse(credentials).API_TOKEN_SECRET;
 
 function pick(o, keys) {
   return keys.reduce((acc, key) => {

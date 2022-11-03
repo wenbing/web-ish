@@ -16,7 +16,7 @@ const AsyncCompnent = React.lazy(() =>
   import(/* webpackChunkName: 'async-component' */ "./AsyncComponent.js")
 );
 
-function Default(props) {
+function Home(props) {
   const [adcodes, setAdcodes] = useState(props.adcodes);
   const [lives, setLives] = useState(props.lives);
   useEffect(() => {
@@ -92,7 +92,7 @@ const App = withErrorBoundary((props) => {
     contents = <div className="container">Error!</div>;
   } else {
     const isMine = props.route.destination === "/mine.html";
-    contents = isMine ? <Mine {...props} /> : <Default {...props} />;
+    contents = isMine ? <Mine {...props} /> : <Home {...props} />;
   }
   return (
     <>
@@ -108,7 +108,10 @@ App.ThemeContext = ThemeContext;
 App.getInitialData = async (props) => {
   const isMine = props.route.destination === "/mine.html";
   const adcodes = isMine ? [] : defaultCities;
-  const lives = await Promise.all(adcodes.map((city) => fetchInfo(city)));
+  const { isStatic } = props;
+  const lives = await Promise.all(
+    adcodes.map((city) => fetchInfo(city, { isStatic }))
+  );
   return { date: Date.now(), adcodes, lives };
 };
 

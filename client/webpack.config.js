@@ -65,11 +65,6 @@ const defines = {
   "process.env.NODE_ENV": JSON.stringify(mode),
   "process.env.BUILD_TARGET": JSON.stringify(target),
 };
-if (process.env.GITHUB_PAGES !== undefined) {
-  defines["process.env.GITHUB_PAGES"] = JSON.stringify(
-    process.env.GITHUB_PAGES
-  );
-}
 const client = {
   mode,
   entry,

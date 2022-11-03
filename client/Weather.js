@@ -17,11 +17,8 @@ const classNames = {
 };
 // import locator from "./locator.png";
 
-export async function fetchInfo(city) {
-  if (
-    process.env.BUILD_TARGET === "node" &&
-    process.env.GITHUB_PAGES === "true"
-  ) {
+export async function fetchInfo(city, { isStatic }) {
+  if (process.env.BUILD_TARGET === "node" && isStatic) {
     const cityToCity = {
       341881: { province: "安徽", city: "宁国市" },
       500000: { province: "重庆", city: "重庆市" },

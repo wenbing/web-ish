@@ -24,7 +24,7 @@ export const routes = [
   },
   {
     name: "weixin",
-    source: "/weixin",
+    source: "/weixin(\\.html)?",
     destination: "/weixin.html",
     Component: () => import(/* webpackChunkName: 'weixin' */ "./Weixin.mjs"),
   },

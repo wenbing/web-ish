@@ -8,7 +8,7 @@ import icon from "./icon.png";
 
 export { publicPath } from "./paths.js";
 
-function importRoutes() {
+export function importRoutes() {
   return import(/* webpackChunkName:'routes' */ "./routes.mjs");
 }
 
