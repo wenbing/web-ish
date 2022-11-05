@@ -1,9 +1,8 @@
 import ReactDOM from "react-dom/client";
 
 import "./client.css";
-import { match, publicPath } from "./routes.mjs";
+import { match, publicPath, RouteProps } from "./routes";
 import icon from "./icon.png";
-import React from "react";
 
 const searchParams = new URLSearchParams(location.search);
 if (process.env.NODE_ENV === "development" && searchParams.has("istest")) {
@@ -17,7 +16,7 @@ const INITIAL_DATA = window.INITIAL_DATA;
       `${publicPath}${INITIAL_DATA.route.pathname}${INITIAL_DATA.route.search}`
     );
     const Component = await route.Component();
-    let props = {
+    let props: RouteProps = {
       ...INITIAL_DATA,
       favicon: icon,
       route: { ...INITIAL_DATA.route, Component },
@@ -32,7 +31,7 @@ const INITIAL_DATA = window.INITIAL_DATA;
   async function update(loc) {
     const route = match(`${loc.pathname}${loc.search}`);
     const Component = await route.Component();
-    let props = {
+    let props: RouteProps = {
       ...INITIAL_DATA,
       favicon: icon,
       route: { ...route, Component },
@@ -65,8 +64,7 @@ const INITIAL_DATA = window.INITIAL_DATA;
     root.render(<Component {...props} />);
   }
 
-  window.addEventListener("popstate", async (event) => {
-    const location = event.target.location;
-    await handleRender(location);
+  window.addEventListener("popstate", async () => {
+    await handleRender(document.location);
   });
 })();

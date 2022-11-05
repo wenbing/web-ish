@@ -3,7 +3,7 @@ const http = require("http");
 const webpack = require("webpack");
 const clearRequireCache = require("clear-require-cache");
 
-const serverWebpackConfig = require("../server/webpack.config");
+const serverWebpackConfig = require("../server/webpack.server");
 
 const setupMiddlewares = (middlewares, devServer) => {
   const middlewareName = "render middleware";
@@ -15,10 +15,13 @@ const setupMiddlewares = (middlewares, devServer) => {
   const serverlibDir = serverCompiler.outputPath;
 
   let serverCompilerInvalid = null;
-  serverCompiler.hooks.invalid.tap(middlewareName, (filename, changeTime) => {
-    if (filename.endsWith("server-entry.mjs"))
-      serverCompilerInvalid = path.relative(clientCompiler.context, filename);
-  });
+  serverCompiler.hooks.invalid.tap(
+    middlewareName,
+    (filename /*, changeTime*/) => {
+      if (filename.endsWith("server-entry.tsx"))
+        serverCompilerInvalid = path.relative(clientCompiler.context, filename);
+    }
+  );
   serverCompiler.watch({}, function handleWatchRun(err, stats) {
     if (err) throw err; // 1)what occurred?
     logger.info("server compiler start");

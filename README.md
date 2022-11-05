@@ -9,11 +9,11 @@
 
 ```json
 {
-  "start": "npx webpack serve --config client/webpack.config.js",
-  "build-client": "npx webpack --config client/webpack.config.js",
-  "build-server": "npx webpack --config server/webpack.config.js",
+  "start": "npx webpack serve",
+  "build-client": "npx webpack --config server/webpack.client.js",
+  "build-server": "npx webpack --config server/webpack.server.js",
   "build": "node server/build.js",
-  "build-pages": "node server/build.js --pathname / /mine.html /setting.html",
+  "build-pages": "node server/build.js --pathname all",
   "bundle": "node server/bundle.js",
   "server": "node server/server.js"
 }

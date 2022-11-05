@@ -1,4 +1,4 @@
-const fetch = (...args) =>
-  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const serverFetch = (url, init) =>
+  import("node-fetch").then(({ default: f }) => f(url, init));
 
-module.exports = fetch;
+module.exports = serverFetch;

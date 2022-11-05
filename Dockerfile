@@ -2,11 +2,12 @@ FROM alpine:3.13 AS BUILD
 RUN sed -i "s@dl-cdn.alpinelinux.org@repo.huaweicloud.com@g" /etc/apk/repositories \
     && apk add --update --no-cache nodejs npm
 WORKDIR /web-ish-build
-COPY package*.json .npmrc ./
+COPY package*.json .npmrc .eslint* ./
 RUN npm i
 COPY client client
 COPY server server 
 COPY bootstrap bootstrap 
+RUN npx tsc -p ./client && npx eslint . 
 RUN NODE_ENV=production node server/build.js
 
 FROM alpine:3.13

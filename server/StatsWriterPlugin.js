@@ -1,6 +1,9 @@
 const fs = require("fs");
 const path = require("path");
-const acorn = require("acorn");
+const {
+  parse,
+  AST_NODE_TYPES,
+} = require("@typescript-eslint/typescript-estree");
 const walk = require("acorn-walk");
 const vm = require("vm");
 
@@ -47,20 +50,27 @@ class StatsWriterPlugin {
 module.exports = StatsWriterPlugin;
 
 function getRouteMods() {
-  const routeModulePath = path.resolve(__dirname, "../client/routes.mjs");
+  const routeModulePath = path.resolve(__dirname, "../client/routes.ts");
   const routeModuleContent = fs.readFileSync(routeModulePath, "utf8");
-  const ast = acorn.parse(routeModuleContent, {
-    ecmaVersion: 2022,
-    sourceType: "module",
+  const ast = parse(routeModuleContent, {
+    jsx: true,
+    range: true,
   });
   const mods = [];
   const ImportExpression = (node) => {
-    const range = routeModuleContent.slice(node.start, node.end);
-    const comments = range.match(/\/\*([^\*\/]*)\*\//);
+    const [start, end] = node.range;
+    const range = routeModuleContent.slice(start, end);
+    const comments = range.match(/\/\*([^*/]*)\*\//);
     const value = comments[1];
     const val = vm.runInNewContext(`(function(){return {${value}};})()`);
     mods.push({ source: node.source.value, ...val });
   };
-  walk.simple(ast, { ImportExpression });
+  const tsNodeTypes = Object.keys(AST_NODE_TYPES).filter((name) =>
+    name.startsWith("TS")
+  );
+  const base = { ...walk.base };
+  const noop = () => {};
+  tsNodeTypes.forEach((type) => (base[type] = noop));
+  walk.simple(ast, { ImportExpression }, base);
   return mods;
 }

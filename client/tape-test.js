@@ -4,7 +4,7 @@ import tbc from "tap-browser-color";
 const undo = tbc();
 
 async function someAsyncThing() {
-  return new Promise((res, rej) =>
+  return new Promise((res) =>
     setTimeout(() => {
       console.log("delay 1s in someAsyncThing()");
       res(true);

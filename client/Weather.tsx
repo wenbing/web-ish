@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./Weather.css";
-import fetch from "./fetch.js";
+import fetch from "./fetch";
 const icons = {
   晴: "☀️",
   云: "☁️",
@@ -17,7 +17,10 @@ const classNames = {
 };
 // import locator from "./locator.png";
 
-export async function fetchInfo(city, { isStatic }) {
+export async function fetchInfo(
+  city,
+  { isStatic }: { isStatic?: boolean } = {}
+) {
   if (process.env.BUILD_TARGET === "node" && isStatic) {
     const cityToCity = {
       341881: { province: "安徽", city: "宁国市" },
@@ -47,7 +50,19 @@ export async function fetchInfo(city, { isStatic }) {
   return lives[0];
 }
 
-export default function Weather(props) {
+export type WeatherLives = {
+  adcode: string;
+  city: string;
+  weather: string;
+  temperature: string;
+};
+
+type WeatherProps = {
+  lives: WeatherLives;
+  city: string;
+};
+
+export default function Weather(props: WeatherProps) {
   const [lives, setLives] = useState(props.lives);
   const [updateTime, setUpdateTime] = useState(Date.now());
   useEffect(() => {
@@ -64,7 +79,7 @@ export default function Weather(props) {
   const handleClick = async () => await handleUpdate();
   const weather = lives.weather;
   const temperature = lives.temperature;
-  let city = lives.city;
+  const city = lives.city;
   // if (city.endsWith("市")) city = city.slice(0, -1);
   const matched = weather.match(/.*([晴阴云雨雪]).*/);
   let wkey;
@@ -75,7 +90,7 @@ export default function Weather(props) {
   }
   const icon = icons[wkey];
   const className = classNames[wkey];
-  const infoStyle = {};
+  const infoStyle: { lineHeight?: string } = {};
   if (city.length > 6) infoStyle.lineHeight = "1rem";
   return (
     <div

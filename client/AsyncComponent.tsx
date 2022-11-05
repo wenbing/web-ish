@@ -1,6 +1,5 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import App from "./App";
-import "./AsyncComponent.css";
 
 function AsyncCompnent() {
   const theme = useContext(App.ThemeContext);

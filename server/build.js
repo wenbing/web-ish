@@ -3,11 +3,10 @@ const path = require("path");
 const webpack = require("webpack");
 const cp = require("child_process");
 
-const clientWebpackConfig = require("../client/webpack.config.js");
-const serverWebpackConfig = require("./webpack.config.js");
+const clientWebpackConfig = require("../server/webpack.client.js");
+const serverWebpackConfig = require("../server/webpack.server.js");
 const { publicPath } = require("../client/paths.js");
 const dirs = require("../server/dirs.js");
-const { get } = require("http");
 const { webDir, serverlibDir } = dirs;
 const publicDir = dirs.publicDir(publicPath);
 
@@ -57,15 +56,13 @@ if (require.main === module) {
 }
 
 async function getStaticPathnames(cliOpts) {
-  let pathnames = [];
   if (cliOpts.pathname === "all") {
     const { importRoutes } = require("../server_lib/render.js");
     const { routes, notfound } = await importRoutes();
     return [].concat(routes, notfound).map(({ destination }) => destination);
   } else {
-    pathnames = [].concat(cliOpts.pathname);
+    return [].concat.apply([], cliOpts.pathname);
   }
-  return pathnames;
 }
 
 function parseArgv() {

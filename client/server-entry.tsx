@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import { Writable } from "stream";
-import React from "react";
 import { renderToPipeableStream } from "react-dom/server";
 
 import icon from "./icon.png";
@@ -9,7 +8,7 @@ import icon from "./icon.png";
 export { publicPath } from "./paths.js";
 
 export function importRoutes() {
-  return import(/* webpackChunkName:'routes' */ "./routes.mjs");
+  return import(/* webpackChunkName:'routes' */ "./routes");
 }
 
 export async function createError(initials, opts) {
@@ -76,22 +75,22 @@ export async function createDoc(initials, opts) {
   );
   const { builtAt } = stats;
   const route = match(url);
-  let { Component } = route;
-  Component = await route.Component();
+  const Component = await route.Component();
   const getProps = () =>
     Object.assign(
-      { builtAt, favicon: icon, url },
+      { builtAt, favicon: icon },
+      { url },
       isStatic === true ? { isStatic } : null,
       restInitials,
       { route: { ...route, Component } }
     );
-  let data;
+  let data: Record<string, unknown> | undefined;
   if (typeof Component.getInitialData === "function") {
     data = await Component.getInitialData(getProps());
   }
   let initialData = { ...getProps(), [route.name]: data };
   initialData = JSON.stringify(initialData, null, 2);
-  const props = { ...data, ...getProps() };
+  const props = { ...(data || {}), ...getProps() };
   const app = <Component {...props} />;
   const content = await new Promise((resolve, reject) => {
     let body = "";
@@ -155,7 +154,10 @@ window.INITIAL_DATA = ${initialData}
 
 function getAssets({ assets, publicDir, publicPath, fileSystem }) {
   return assets.reduce(
-    (acc, item) => {
+    (
+      acc: { body: string[]; header: string[] },
+      item: { name: string; size: number }
+    ) => {
       const extname = path.extname(item.name);
       switch (extname) {
         case ".js":

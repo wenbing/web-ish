@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const publicPath = "/web-ish";
 
 let outputPublicPath;

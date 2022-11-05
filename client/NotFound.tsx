@@ -1,7 +1,8 @@
-import Nav from "./Nav.js";
-import Loading from "./Loading.js";
+import Nav from "./Nav";
+import Loading from "./Loading";
+import { RouteComponent, RouteProps } from "./routes";
 
-export default function NotFound(props) {
+const NotFound: RouteComponent = (props: RouteProps) => {
   return (
     <>
       <Loading isLoading={props.isLoading}></Loading>
@@ -13,4 +14,6 @@ export default function NotFound(props) {
       Not Found
     </>
   );
-}
+};
+
+export default NotFound;

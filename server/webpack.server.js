@@ -1,4 +1,3 @@
-const fs = require("fs");
 const path = require("path");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { DefinePlugin } = require("webpack");
@@ -6,6 +5,7 @@ const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 const { webDir, serverlibDir } = require("../server/dirs.js");
 const { outputPublicPath } = require("../client/paths.js");
+const extensions = ["js", "ts", "tsx", "cjs", "mjs"];
 
 class ServerStatsWriterPlugin {
   constructor() {
@@ -36,7 +36,7 @@ class ServerStatsWriterPlugin {
 
 const jsRule = [
   {
-    test: /\.m?js$/,
+    test: new RegExp(`\\.${extensions.join("|")}$`),
     exclude: /node_modules/,
     use: {
       loader: "babel-loader",
@@ -81,20 +81,22 @@ const output = {
 };
 const server = {
   mode,
-  target,
   devtool: false,
+  target,
   entry: {
-    render: path.resolve(__dirname, "../client/server-entry.mjs"),
+    render: path.resolve(__dirname, "../client/server-entry.tsx"),
   },
   output,
-  module: { rules: jsRule.concat(serverCssRule).concat(assetRule) },
+  module: { rules: [].concat(jsRule, serverCssRule, assetRule) },
+  resolve: {
+    extensions: extensions.map((ext) => `.${ext}`),
+  },
   plugins: [
     new MiniCssExtractPlugin(),
     new DefinePlugin(defines),
     new ServerStatsWriterPlugin(),
   ],
   externals,
-  externalsType: "node-commonjs",
   optimization: { moduleIds: "named", chunkIds: "named", minimize: false },
 };
 

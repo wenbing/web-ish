@@ -2,12 +2,13 @@ import { useEffect, useState, useDeferredValue, useMemo } from "react";
 import Nav from "./Nav";
 import Loading from "./Loading";
 import { STORAGE_KEY_CITIES } from "./defaultCities";
-import { publicPath } from "./routes.mjs";
+import { publicPath, RouteComponent, RouteProps } from "./routes";
 import "./Setting.css";
 
 // cities, items, byFirstLetter, byPinyin, byAdcode, byName
+type CityItem = { adcode: string; name: string };
 
-function normalize(data) {
+function normalize(data): CityItem[] {
   const cities = Object.keys(data).reduce(
     (acc, fl) => acc.concat(data[fl]),
     []
@@ -24,12 +25,15 @@ function normalize(data) {
 
 function getCitiesBy(name, items) {
   return items.reduce(
-    (acc, item) => Object.assign(acc, { [[item[name]]]: item }),
+    (acc, item) => Object.assign(acc, { [item[name]]: item }),
     {}
   );
 }
 
-function formatCities(adcodes, citiesByAdCode) {
+function formatCities(
+  adcodes,
+  citiesByAdCode
+): { adcode: string; name: string }[] {
   return adcodes.map((adcode) => ({
     adcode,
     name: ((item) =>
@@ -99,16 +103,20 @@ function useCity(initials) {
     });
   };
 
-  const isLoading = cities.length === 0;
-  const state = {
-    isLoading,
+  return {
     cities,
     selected,
+    selectCity,
   };
-  return [state, { selectCity }];
 }
 
-function CityList({ cities, selectCity }) {
+function CityList({
+  cities,
+  selectCity,
+}: {
+  cities: CityItem[];
+  selectCity: (adcode: string) => void;
+}) {
   const handleSelect = (evt) => {
     if (evt.target.tagName.toLowerCase() === "li") {
       const adcode = evt.target.dataset.adcode;
@@ -126,8 +134,12 @@ function CityList({ cities, selectCity }) {
   );
 }
 
-function Setting(props) {
-  const [{ cities, selected, isLoading }, { selectCity }] = useCity({
+interface SettingProps extends RouteProps {
+  selected: [];
+}
+
+const Setting: RouteComponent = (props: SettingProps) => {
+  const { cities, selected, selectCity } = useCity({
     selected: props.selected,
   });
 
@@ -190,10 +202,9 @@ function Setting(props) {
       </div>
     </>
   );
-}
+};
 
 Setting.getInitialData = async () => {
-  let selected;
   let data;
   if (process.env.BUILD_TARGET === "node") {
     data = require("../server/cities.json");
@@ -203,7 +214,7 @@ Setting.getInitialData = async () => {
   }
   const items = normalize(data);
   const citiesByAdCode = getCitiesBy("adcode", items);
-  selected = formatCities([], citiesByAdCode);
+  const selected: CityItem[] = formatCities([], citiesByAdCode);
   return { selected };
 };
 

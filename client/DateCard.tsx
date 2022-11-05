@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-function DateCard(props) {
+function DateCard(props: { date: number }) {
   const [date, setDate] = useState(props.date);
   useEffect(() => {
     const intervalID = setInterval(() => {
@@ -8,14 +8,14 @@ function DateCard(props) {
     }, 1000);
     return () => clearInterval(intervalID);
   });
-  let time;
+  let time: string;
   if (date) {
     const d = new Date(date).toUTCString();
     const parts = d.split(" ");
     time = parts[parts.length - 2];
     time = time
       .split(":")
-      .map((item, index) => {
+      .map((item: string, index: number) => {
         if (index === 0)
           return ((parseInt(item) + 8) % 24).toString().padStart(2, "0");
         return item;

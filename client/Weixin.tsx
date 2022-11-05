@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 // import "weui";
-import Nav from "./Nav.js";
-import Loading from "./Loading.js";
+import Nav from "./Nav";
+import Loading from "./Loading";
+import { RouteComponent, RouteProps } from "./routes";
 
 const getInWeixin = (props) =>
   props.headers["x-requested-with"] === "com.tencent.mm" ||
@@ -9,9 +10,9 @@ const getInWeixin = (props) =>
 
 configWX.promise = null;
 async function configWX(props) {
-  const wx = await import(
-    /* webpackChunkName: 'weixin' */ "./jweixin-1.6.0.cjs"
-  );
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const wx = await import(/* webpackChunkName: 'weixin' */ "./jweixin-1.6.0");
   if (!configWX.promise) {
     const debug = false; //process.env.NODE_ENV === "development";
     const { appId } = props;
@@ -36,7 +37,7 @@ function promisifyWX(wx, funcName) {
   if (wx[funcName] !== promisified[funcName]) {
     const func = wx[funcName].bind(wx);
     promisified[funcName] = (opts) =>
-      new Promise((resolve, reject) => {
+      new Promise((resolve) => {
         const success = (res) => resolve(res);
         const fail = (res) => resolve(res);
         func({ ...opts, success, fail });
@@ -45,7 +46,11 @@ function promisifyWX(wx, funcName) {
   return promisified[funcName];
 }
 
-export default function Weixin(props) {
+interface WeixinProps extends RouteProps {
+  appId: string;
+  urlQRCode: string;
+}
+const Weixin: RouteComponent = (props: WeixinProps) => {
   const { url, headers } = props;
   const inWeixin = getInWeixin(props);
   const [latlng, setLatlng] = useState({});
@@ -105,21 +110,25 @@ export default function Weixin(props) {
       </div>
     </>
   );
-}
+};
 
 if (process.env.BUILD_TARGET === "node") {
   Weixin.getInitialData = async (props) => {
     const inWeixin = getInWeixin(props);
     const { url, headers } = props;
     const href = ` ${headers["x-forwarded-proto"]}://${headers.host}${url}`;
-    const urlQRCode = await require("qrcode").toDataURL(href, {
+    // console.log(await import("qrcode"));
+    const { toDataURL } = await import("qrcode");
+    const urlQRCode = await toDataURL(href, {
       margin: 0,
       scale: 6,
     });
     if (!inWeixin) return { urlQRCode };
     const appId = "wxc6f6f01560d25b57";
-    const wxc = require("../server/config-wx.js");
+    const wxc = await import("../server/config-wx.js");
     const jsapi_config = await wxc.wxConfig(props);
     return { urlQRCode, appId, jsapi_config };
   };
 }
+
+export default Weixin;

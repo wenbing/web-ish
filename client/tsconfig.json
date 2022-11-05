@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "typeRoots": ["./", "node_modules/@types"]
+  },
+  "include": ["./**/*"]
+}

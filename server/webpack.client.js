@@ -10,10 +10,11 @@ const { publicPath, outputPublicPath } = require("../client/paths.js");
 const dirs = require("../server/dirs.js");
 const { serverlibDir } = dirs;
 const publicDir = dirs.publicDir(publicPath);
+const extensions = ["js", "ts", "tsx", "cjs", "mjs"];
 
 const jsRule = [
   {
-    test: /\.m?js$/,
+    test: new RegExp(`\\.${extensions.join("|")}$`),
     exclude: /node_modules/,
     use: {
       loader: "babel-loader",
@@ -40,8 +41,8 @@ const assetRule = [
   },
 ];
 const entry = {
-  client: path.resolve(__dirname, "./client-entry.js"),
-  error: path.resolve(__dirname, "./error-entry.js"),
+  client: path.resolve(__dirname, "../client/client-entry.tsx"),
+  error: path.resolve(__dirname, "../client/error-entry.ts"),
 };
 const output = {
   path: publicDir,
@@ -70,14 +71,14 @@ const client = {
   entry,
   output,
   target,
-  module: { rules: jsRule.concat(cssRule).concat(assetRule) },
+  module: { rules: [].concat(jsRule, cssRule, assetRule) },
   resolve: {
     fallback: {
       path: require.resolve("path-browserify"),
       stream: require.resolve("stream-browserify"),
     },
+    extensions: extensions.map((ext) => `.${ext}`),
   },
-  // externals,
   plugins: [
     new webpack.ProvidePlugin({
       // buffer: require.resolve('buffer'),

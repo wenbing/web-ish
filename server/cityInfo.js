@@ -37,7 +37,7 @@ function nameToPinyin(name) {
     重: "chong",
   };
   const reg = new RegExp(`(?:${Object.keys(replaced).join("|")})`, "g");
-  const n = name.replace(reg, function (matched, index, string) {
+  const n = name.replace(reg, function (matched /*, index, string*/) {
     return replaced[matched];
   });
   let full;

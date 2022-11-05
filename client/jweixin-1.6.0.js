@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 !(function (e, n) {
   "function" == typeof define && (define.amd || define.cmd)
     ? define(function () {

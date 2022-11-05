@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
-export default function Loading({ isLoading = false }) {
+type LoadingProps = { isLoading: boolean };
+
+export default function Loading({ isLoading = false }: LoadingProps) {
   const [width, setWidth] = useState("0%");
   const [duration, setDuration] = useState("0s");
   useEffect(() => {
@@ -11,7 +13,7 @@ export default function Loading({ isLoading = false }) {
       setDuration("0.1s");
     }
   }, [isLoading]);
-  const onTransitionEnd = (evt) => {
+  const onTransitionEnd = () => {
     setWidth("0%");
     setDuration("0s");
   };

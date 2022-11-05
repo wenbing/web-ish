@@ -1,22 +1,30 @@
-import React, { Suspense, useEffect, useState } from "react";
+import * as React from "react";
+import { useState, useEffect, Suspense } from "react";
 import "./App.css";
 import Nav from "./Nav";
 import Loading from "./Loading";
 import DateCard from "./DateCard";
-import Weather, { fetchInfo } from "./Weather";
+import Weather, { fetchInfo, WeatherLives } from "./Weather";
 import defaultCities, { STORAGE_KEY_CITIES } from "./defaultCities";
-import withErrorBoundary from "./withErrorBoundary.mjs";
+import withErrorBoundary from "./withErrorBoundary";
+import { RouteProps, RouteComponent } from "./routes";
 
 const themes = {
   light: { name: "light", foreground: "#000000", background: "#eeeeee" },
   dark: { name: "dark", foreground: "#ffffff", background: "#222222" },
 };
 const ThemeContext = React.createContext(themes.light);
-const AsyncCompnent = React.lazy(() =>
-  import(/* webpackChunkName: 'async-component' */ "./AsyncComponent.js")
+const AsyncCompnent = React.lazy(
+  () => import(/* webpackChunkName: 'async-component' */ "./AsyncComponent")
 );
 
-function Home(props) {
+interface AppProps extends RouteProps {
+  date: number;
+  adcodes: string[];
+  lives: WeatherLives[];
+}
+
+function Home(props: AppProps) {
   const [adcodes, setAdcodes] = useState(props.adcodes);
   const [lives, setLives] = useState(props.lives);
   useEffect(() => {
@@ -36,7 +44,7 @@ function Home(props) {
     <div className="cards">
       <DateCard date={props.date}></DateCard>
 
-      {adcodes.map((adcode, index) => (
+      {adcodes.map((adcode) => (
         <Weather
           key={adcode}
           city={adcode}
@@ -53,12 +61,12 @@ function Home(props) {
   );
 }
 
-function Mine(props) {
+function Mine(props: AppProps) {
   const [adcodes, setAdcodes] = useState(props.adcodes);
   const [lives, setLives] = useState(props.lives);
   useEffect(() => {
     (async () => {
-      let data = localStorage.getItem(STORAGE_KEY_CITIES);
+      const data = localStorage.getItem(STORAGE_KEY_CITIES);
       if (data) {
         const keys = JSON.parse(data).map(({ adcode }) => adcode);
         const infos = await Promise.all(keys.map((city) => fetchInfo(city)));
@@ -72,7 +80,7 @@ function Mine(props) {
   }, [props.route]);
   return (
     <div className="cards">
-      {adcodes.map((adcode, index) => (
+      {adcodes.map((adcode) => (
         <Weather
           key={adcode}
           city={adcode}
@@ -83,7 +91,7 @@ function Mine(props) {
   );
 }
 
-const App = withErrorBoundary((props) => {
+const App: RouteComponent = withErrorBoundary((props: AppProps) => {
   const { isLoading, render, route, headers, error } = props;
   const loading = <Loading isLoading={isLoading}></Loading>;
   const nav = <Nav {...{ render, route, headers, error }}></Nav>;

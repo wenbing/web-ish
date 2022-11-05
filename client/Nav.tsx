@@ -1,7 +1,9 @@
-import { match, publicPath } from "./routes.mjs";
+import { match, publicPath, RouteProps } from "./routes";
 import "./Nav.css";
 
-function Nav(props) {
+type NavProps = Partial<RouteProps>;
+
+function Nav(props: NavProps) {
   const { pathname, search } = props.route;
   const handleClick = async (evt) => {
     if (evt.target.tagName !== "A") {
@@ -28,7 +30,12 @@ function Nav(props) {
     props.render(loc);
   };
 
-  let items = [
+  let items: {
+    label: string,
+    href: string,
+    className?: string,
+    filter?: () => boolean,
+  }[] = [
     { label: "Home", href: "/index.html" },
     { label: "Mine", href: "/mine.html" },
     { label: "Weixin", href: "/weixin" },

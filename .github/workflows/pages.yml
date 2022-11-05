@@ -40,6 +40,7 @@ jobs:
         run: |
           rm -rf public server_lib
           npm install
+          npx tsc -p ./client && npx eslint .
           NODE_ENV=production node server/build.js --pathname all
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
