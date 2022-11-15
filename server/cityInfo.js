@@ -2,9 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const pinyin = require("pinyin").default;
 const dirs = require("../server/dirs.js");
-const { publicPath } = require("../client/paths.js");
 const { webDir, serverDir } = dirs;
-const publicDir = dirs.publicDir(publicPath);
 
 function nameToPinyin(name) {
   let replaced = {
@@ -111,7 +109,10 @@ function normalizedCities(cities = citiesTable()) {
   return cities;
 }
 
-function writeCities() {
+async function writeCities() {
+  const { publicPath } = await import("../client/shared_routes.mjs");
+  const publicDir = dirs.publicDir(publicPath);
+
   let cities = normalizedCities(citiesTable());
   cities = JSON.stringify(cities.byCityFirstLetter, null, 2);
   const cfile = path.join(publicDir, "cities.json");
@@ -143,7 +144,9 @@ writeCities.normalizedCities = normalizedCities;
 module.exports = writeCities;
 
 if (require.main === module) {
-  writeCities();
+  (async () => {
+    await writeCities();
+  })();
 }
 
 function citiesTable() {

@@ -20,15 +20,9 @@ const server = http.createServer(async (req, res) => {
   const is = { doc: isDoc(req), api: isApi(req, res, { publicPath }) };
   try {
     await reqHandler(req, res, { render, logger });
-  } catch (ex) {
-    logger.error(ex.stack);
-    res.setHeader("Content-Type", is.doc ? "text/html" : "application/json");
-    const statusCode = ex.statusCode || 500;
-    res.writeHead(statusCode, http.STATUS_CODES[statusCode]);
-    const body = is.doc
-      ? ex.message
-      : JSON.stringify({ code: ex.code || -1, message: ex.message });
-    res.end(body);
+  } catch (error) {
+    logger.error(error.stack);
+    safeRespond(req, res, { is, error });
   }
 });
 
@@ -36,3 +30,15 @@ const port = process.env.NODE_ENV === "production" ? 8000 : 80;
 server.listen(port, function () {
   console.log(`server is listening at ${JSON.stringify(this.address())}`);
 });
+
+function safeRespond(req, res, { is, error }) {
+  const statusCode = error.statusCode || 500;
+  const contentType = is.doc ? "text/html" : "application/json";
+  const headers = { "Content-Type": contentType };
+  const statusMessage = http.STATUS_CODES[statusCode];
+  if (!res.headersSent) res.writeHead(statusCode, statusMessage, headers);
+  const body = is.doc
+    ? error.message
+    : JSON.stringify({ code: error.code || -1, message: error.message });
+  if (!res.writableEnded) res.end(body);
+}

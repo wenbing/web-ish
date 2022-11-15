@@ -1,13 +1,14 @@
 import * as React from "react";
 import { useState, useEffect, Suspense } from "react";
-import "./App.css";
+
 import Nav from "./Nav";
 import Loading from "./Loading";
 import DateCard from "./DateCard";
 import Weather, { fetchInfo, WeatherLives } from "./Weather";
-import defaultCities, { STORAGE_KEY_CITIES } from "./defaultCities";
 import withErrorBoundary from "./withErrorBoundary";
-import { RouteProps, RouteComponent } from "./routes";
+import { publicPath } from "./shared_routes.mjs";
+import defaultCities, { STORAGE_KEY_CITIES } from "./defaultCities";
+import "./App.css";
 
 const themes = {
   light: { name: "light", foreground: "#000000", background: "#eeeeee" },
@@ -20,56 +21,34 @@ const AsyncCompnent = React.lazy(
 
 interface AppProps extends RouteProps {
   date: number;
+  defaultAdcodes: string[];
+  defaultLives: WeatherLives[];
   adcodes: string[];
   lives: WeatherLives[];
+  readme?: string;
 }
 
-function Home(props: AppProps) {
-  const [adcodes, setAdcodes] = useState(props.adcodes);
-  const [lives, setLives] = useState(props.lives);
-  useEffect(() => {
-    (async () => {
-      if (props.isStatic) {
-        const keys = props.adcodes;
-        const infos = await Promise.all(keys.map((city) => fetchInfo(city)));
-        setLives(infos);
-        setAdcodes(keys);
-      } else {
-        setLives(props.lives);
-        setAdcodes(props.adcodes);
-      }
-    })();
-  }, [props.route]);
+function Readme(props: AppProps) {
   return (
-    <div className="cards">
-      <DateCard date={props.date}></DateCard>
-
-      {adcodes.map((adcode) => (
-        <Weather
-          key={adcode}
-          city={adcode}
-          lives={lives.find((item) => item.adcode === adcode)}
-        ></Weather>
-      ))}
-
-      <ThemeContext.Provider value={themes.dark}>
-        <Suspense fallback={<div>加载中...</div>}>
-          <AsyncCompnent />
-        </Suspense>
-      </ThemeContext.Provider>
-    </div>
+    <div
+      className="readme"
+      dangerouslySetInnerHTML={{ __html: props.readme }}
+    />
   );
 }
 
 function Mine(props: AppProps) {
   const [adcodes, setAdcodes] = useState(props.adcodes);
   const [lives, setLives] = useState(props.lives);
+  const token = props.headers.token as string;
   useEffect(() => {
     (async () => {
       const data = localStorage.getItem(STORAGE_KEY_CITIES);
       if (data) {
         const keys = JSON.parse(data).map(({ adcode }) => adcode);
-        const infos = await Promise.all(keys.map((city) => fetchInfo(city)));
+        const infos = await Promise.all(
+          keys.map((city) => fetchInfo(city, { token }))
+        );
         setLives(infos);
         setAdcodes(keys);
       } else {
@@ -78,16 +57,53 @@ function Mine(props: AppProps) {
       }
     })();
   }, [props.route]);
+
+  const [defaultAdcodes, setDefaultAdcodes] = useState(props.defaultAdcodes);
+  const [defaultLives, setDefaultLives] = useState(props.defaultLives);
+  useEffect(() => {
+    (async () => {
+      const isStatic = props.headers["x-build-static"];
+      if (isStatic) {
+        const keys = props.defaultAdcodes;
+        const infos = await Promise.all(keys.map((city) => fetchInfo(city)));
+        setDefaultAdcodes(keys);
+        setDefaultLives(infos);
+      } else {
+        setDefaultAdcodes(props.defaultAdcodes);
+        setDefaultLives(props.defaultLives);
+      }
+    })();
+  }, [props.route]);
   return (
-    <div className="cards">
-      {adcodes.map((adcode) => (
-        <Weather
-          key={adcode}
-          city={adcode}
-          lives={lives.find((item) => item.adcode === adcode)}
-        ></Weather>
-      ))}
-    </div>
+    <>
+      <div className="cards">
+        <DateCard date={props.date}></DateCard>
+        {defaultAdcodes.map((adcode) => (
+          <Weather
+            key={adcode}
+            token={token}
+            city={adcode}
+            lives={defaultLives.find((item) => item.adcode === adcode)}
+          ></Weather>
+        ))}
+        <ThemeContext.Provider value={themes.dark}>
+          <Suspense fallback={<div>加载中...</div>}>
+            <AsyncCompnent />
+          </Suspense>
+        </ThemeContext.Provider>
+      </div>
+
+      <div className="cards">
+        {adcodes.map((adcode) => (
+          <Weather
+            key={adcode}
+            token={token}
+            city={adcode}
+            lives={lives.find((item) => item.adcode === adcode)}
+          ></Weather>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -100,7 +116,7 @@ const App: RouteComponent = withErrorBoundary((props: AppProps) => {
     contents = <div className="container">Error!</div>;
   } else {
     const isMine = props.route.destination === "/mine.html";
-    contents = isMine ? <Mine {...props} /> : <Home {...props} />;
+    contents = isMine ? <Mine {...props} /> : <Readme {...props} />;
   }
   return (
     <>
@@ -115,12 +131,36 @@ App.ThemeContext = ThemeContext;
 
 App.getInitialData = async (props) => {
   const isMine = props.route.destination === "/mine.html";
-  const adcodes = isMine ? [] : defaultCities;
-  const { isStatic } = props;
-  const lives = await Promise.all(
-    adcodes.map((city) => fetchInfo(city, { isStatic }))
-  );
-  return { date: Date.now(), adcodes, lives };
+  const title = isMine ? "Mine" : "Readme";
+  const token = props.headers.token as string;
+  let readme;
+  if (process.env.BUILD_TARGET === "node") {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // readme = require("../server/readme.js").readme;
+    readme = (await import("../server/readme.js")).readme;
+  } else {
+    readme =
+      props.readme ||
+      (await (
+        await fetch(`${publicPath}/readme.json`, {
+          headers: new Headers({ "x-requested-with": "fetch", token }),
+        })
+      ).json());
+  }
+  if (!isMine) {
+    return { readme };
+  }
+  function getLives(adcodes) {
+    const opts = { isStatic, token };
+    return Promise.all(adcodes.map((city) => fetchInfo(city, opts)));
+  }
+  const date = Date.now();
+  const isStatic = props.headers["x-build-static"] as boolean;
+  const defaultAdcodes = defaultCities;
+  const defaultLives = await getLives(defaultAdcodes);
+  const adcodes = isMine ? [] : defaultAdcodes;
+  const lives = await getLives(adcodes);
+  return { date, defaultAdcodes, defaultLives, adcodes, lives, title };
 };
 
 export default App;

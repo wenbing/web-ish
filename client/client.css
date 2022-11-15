@@ -1,8 +1,10 @@
 :root {
   --nav-bg-color: #f7f7f7;
   --content-bg-color: #ffffff;
-  --card-bg-color: #f7f7f7;
   --font-color: rgba(0, 0, 0, 0.9);
+  --secondary-bg-color: #f9f9fb;
+  --secondary-font-color: #4e4e4e;
+  --card-bg-color: #f7f7f7;
 }
 
 @font-face {

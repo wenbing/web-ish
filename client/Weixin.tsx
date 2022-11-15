@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 // import "weui";
 import Nav from "./Nav";
 import Loading from "./Loading";
-import { RouteComponent, RouteProps } from "./routes";
+import favicon from "./icon.png";
 
 const getInWeixin = (props) =>
   props.headers["x-requested-with"] === "com.tencent.mm" ||
@@ -27,7 +27,7 @@ async function configWX(props) {
     await configWX.promise;
   } catch (ex) {
     console.error(ex);
-    // @TODO report wx config error
+    // @TODO report error: wx config error
   }
   return wx;
 }
@@ -70,7 +70,7 @@ const Weixin: RouteComponent = (props: WeixinProps) => {
           title: "title", // 分享标题
           desc: "desc", // 分享描述
           link: props.url, // 分享链接，该链接域名或路径必须与当前页面对应的公众号 JS 安全域名一致
-          imgUrl: `${props.headers["x-forwarded-proto"]}://${props.headers.host}${props.favicon}`, // 分享图标
+          imgUrl: `${props.headers["x-forwarded-proto"]}://${props.headers.host}${favicon}`, // 分享图标
         });
         setMsgShare(result);
       })();
@@ -78,14 +78,11 @@ const Weixin: RouteComponent = (props: WeixinProps) => {
     [props.appId, props.route]
   );
   const href = ` ${headers["x-forwarded-proto"]}://${headers.host}${url}`;
+  const { render, route } = props;
   return (
     <>
       <Loading isLoading={props.isLoading}></Loading>
-      <Nav
-        render={props.render}
-        route={props.route}
-        headers={props.headers}
-      ></Nav>
+      <Nav {...{ render, route, headers }}></Nav>
       <div className="article weui-article" style={{ margin: "5px" }}>
         {inWeixin && <h2>Wei xin</h2>}
         <p>inWeixin: {inWeixin ? "true" : "false"}</p>
@@ -117,8 +114,9 @@ if (process.env.BUILD_TARGET === "node") {
     const inWeixin = getInWeixin(props);
     const { url, headers } = props;
     const href = ` ${headers["x-forwarded-proto"]}://${headers.host}${url}`;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { toDataURL } = require("qrcode");
     // console.log(await import("qrcode"));
-    const { toDataURL } = await import("qrcode");
     const urlQRCode = await toDataURL(href, {
       margin: 0,
       scale: 6,

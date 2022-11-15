@@ -1,16 +1,12 @@
 import Nav from "./Nav";
 import Loading from "./Loading";
-import { RouteComponent, RouteProps } from "./routes";
 
 const NotFound: RouteComponent = (props: RouteProps) => {
+  const { render, route, headers } = props;
   return (
     <>
       <Loading isLoading={props.isLoading}></Loading>
-      <Nav
-        render={props.render}
-        route={props.route}
-        headers={props.headers}
-      ></Nav>
+      <Nav {...{ render, route, headers }}></Nav>
       Not Found
     </>
   );

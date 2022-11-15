@@ -15,4 +15,5 @@ if (process.env.NODE_ENV === "production") {
   outputPublicPath = `${publicPath}/`;
 }
 
-module.exports = { publicPath, outputPublicPath };
+exports.publicPath = publicPath;
+exports.outputPublicPath = outputPublicPath;

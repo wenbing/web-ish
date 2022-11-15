@@ -1,6 +1,5 @@
 import React from "react";
 import hoistNonReactStatic from "hoist-non-react-statics";
-import { RouteComponent, RouteProps } from "./routes";
 
 export default (Component: RouteComponent) => {
   class ErrorBoundary extends React.Component {
@@ -14,7 +13,7 @@ export default (Component: RouteComponent) => {
       return { error };
     }
     componentDidCatch(/*error, errorInfo*/) {
-      // @TODO logger.error
+      // @TODO report error
     }
     render() {
       const props = {

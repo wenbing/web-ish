@@ -1,0 +1,33 @@
+.blog-article {
+  padding: 10px;
+  padding-bottom: 40px;
+  min-height: 62vh;
+  box-sizing: border-box;
+}
+.blog-article h1 {
+  margin-top: 0;
+}
+.blog-article ul {
+  margin-top: 0;
+}
+.blog-footer {
+  box-sizing: border-box;
+  min-height: calc(38vh - 48px);
+  padding: 10px;
+  background-color: var(--secondary-bg-color);
+  color: var(--secondary-font-color);
+}
+.blog-footer h2 {
+  margin: 0 0 10px 0;
+  font-weight: 400;
+  font-size: 16px;
+}
+
+.blog-footer ul {
+  list-style: none;
+  padding-left: 0px;
+  margin-top: 0;
+}
+.blog-footer ul li {
+  margin-bottom: 5px;
+}

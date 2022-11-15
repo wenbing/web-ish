@@ -1,2 +1,3 @@
+client/shared_internal_routes.js
 public/**/*
 server_lib/**/*

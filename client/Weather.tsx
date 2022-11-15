@@ -19,7 +19,7 @@ const classNames = {
 
 export async function fetchInfo(
   city,
-  { isStatic }: { isStatic?: boolean } = {}
+  { isStatic, token }: { isStatic?: boolean; token?: string } = {}
 ) {
   if (process.env.BUILD_TARGET === "node" && isStatic) {
     const cityToCity = {
@@ -42,9 +42,12 @@ export async function fetchInfo(
     );
   }
   const sp = new URLSearchParams();
-  sp.append("key", "730462af18e87350041dcda934ca66c1");
+  sp.append("token", token);
+  // sp.append("key", "730462af18e87350041dcda934ca66c1");
   sp.append("city", city);
-  const uri = `https://restapi.amap.com/v3/weather/weatherInfo?${sp.toString()}`;
+
+  const uri = `https://hidden-reality.zhengwenbing.com/fetchWeatherInfo?${sp.toString()}`;
+  // const uri = `https://restapi.amap.com/v3/weather/weatherInfo?${sp.toString()}`;
   const res = await fetch(uri);
   const { lives } = await res.json();
   return lives[0];
@@ -60,6 +63,7 @@ export type WeatherLives = {
 type WeatherProps = {
   lives: WeatherLives;
   city: string;
+  token: string;
 };
 
 export default function Weather(props: WeatherProps) {
@@ -73,7 +77,7 @@ export default function Weather(props: WeatherProps) {
     const shouldUpdate = now - updateTime > 10 * 1000;
     if (shouldUpdate) {
       setUpdateTime(now);
-      setLives(await fetchInfo(props.city));
+      setLives(await fetchInfo(props.city, { token: props.token }));
     }
   };
   const handleClick = async () => await handleUpdate();

@@ -1,7 +1,13 @@
 import test from "tape";
-import tbc from "tap-browser-color";
 
-const undo = tbc();
+if (typeof window !== "undefined") {
+  (async function clientMainTest() {
+    const tbc = await import("tap-browser-color");
+    const undo = tbc();
+    test.onFinish(() => undo());
+    test.onFailure(() => undo());
+  })();
+}
 
 async function someAsyncThing() {
   return new Promise((res) =>
@@ -15,6 +21,3 @@ test("test using promises", async function (t) {
   const result = await someAsyncThing();
   t.ok(result);
 });
-
-test.onFinish(() => undo());
-test.onFailure(() => undo());

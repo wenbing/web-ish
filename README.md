@@ -1,9 +1,11 @@
-# Labs
+# Labs in the Garden
 
-- static, https://wenbing.github.io/web-ish
-- labs, https://labs.zhengwenbing.com/web-ish
-- huawei functiongraph, https://e0bff515591548a3a9c63be2086e4a8e.apig.cn-north-4.huaweicloudapis.com/web-ish
-- wechat cloudrun, https://web-ish-14527-5-1314605107.sh.run.tcloudbase.com/web-ish
+## Links
+
+- **static:** https://wenbing.github.io/web-ish
+- **labs:** https://labs.zhengwenbing.com/web-ish
+- **huawei functiongraph:** https://e0bff515591548a3a9c63be2086e4a8e.apig.cn-north-4.huaweicloudapis.com/web-ish
+- **wechat cloudrun:** https://web-ish-14527-5-1314605107.sh.run.tcloudbase.com/web-ish
 
 ## Scripts
 

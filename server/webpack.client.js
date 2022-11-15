@@ -2,19 +2,20 @@ const path = require("path");
 const webpack = require("webpack");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const { BundleStatsWebpackPlugin } = require("bundle-stats-webpack-plugin");
 const StatsWriterPlugin = require("../server/StatsWriterPlugin.js");
 const setupMiddlewares = require("../server/setupMiddlewares.js");
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
-const { publicPath, outputPublicPath } = require("../client/paths.js");
+const { publicPath, outputPublicPath } = require("../client/shared_paths.js");
 const dirs = require("../server/dirs.js");
-const { serverlibDir } = dirs;
+const { webDir, serverlibDir } = dirs;
 const publicDir = dirs.publicDir(publicPath);
 const extensions = ["js", "ts", "tsx", "cjs", "mjs"];
 
 const jsRule = [
   {
-    test: new RegExp(`\\.${extensions.join("|")}$`),
+    test: new RegExp(`\\.(${extensions.join("|")})$`),
     exclude: /node_modules/,
     use: {
       loader: "babel-loader",
@@ -66,7 +67,20 @@ const defines = {
   "process.env.NODE_ENV": JSON.stringify(mode),
   "process.env.BUILD_TARGET": JSON.stringify(target),
 };
+const plugins = [
+  new webpack.ProvidePlugin({
+    // buffer: require.resolve('buffer'),
+    process: require.resolve("process/browser"),
+  }),
+  new StatsWriterPlugin({ outputPath: serverlibDir }),
+  new MiniCssExtractPlugin(miniCssOpts),
+  new webpack.DefinePlugin(defines),
+];
+if (mode === "development") {
+  plugins.push(new BundleStatsWebpackPlugin());
+}
 const client = {
+  name: "client",
   mode,
   entry,
   output,
@@ -79,20 +93,14 @@ const client = {
     },
     extensions: extensions.map((ext) => `.${ext}`),
   },
-  plugins: [
-    new webpack.ProvidePlugin({
-      // buffer: require.resolve('buffer'),
-      process: require.resolve("process/browser"),
-    }),
-    new StatsWriterPlugin({ outputPath: serverlibDir }),
-    new MiniCssExtractPlugin(miniCssOpts),
-    new webpack.DefinePlugin(defines),
-  ],
+  plugins,
   stats: { logging: "info" },
+  externals,
 };
 
 if (mode === "development") {
   client.devtool = "eval-source-map";
+  // client.devtool = "source-map";
   client.devServer = {
     hot: true,
     // port: 3000,
@@ -122,4 +130,17 @@ module.exports = client;
 
 if (require.main === module) {
   console.log(module.exports);
+}
+
+function externals(o, cb) {
+  // o.request startsWith: / ./ ../ \w+|@, aka. filepath or modulename
+  if (o.request.startsWith("/") || o.request.startsWith(".")) {
+    const r = path.resolve(o.context, o.request);
+    const isServerModules = path.relative(webDir, r).startsWith("server/");
+    if (isServerModules) {
+      cb(null, `node-commonjs ${o.request}`);
+      return;
+    }
+  }
+  cb();
 }

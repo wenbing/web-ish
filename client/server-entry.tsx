@@ -3,39 +3,24 @@ import path from "path";
 import { Writable } from "stream";
 import { renderToPipeableStream } from "react-dom/server";
 
-import icon from "./icon.png";
+import favicon from "./icon.png";
+import { getRoutes, notfound, match, publicPath } from "./shared_routes.mjs";
 
-export { publicPath } from "./paths.js";
-
-export function importRoutes() {
-  return import(/* webpackChunkName:'routes' */ "./routes");
-}
+export { publicPath, getRoutes, notfound };
 
 export async function createError(initials, opts) {
-  const { match } = await importRoutes();
+  const statsPath = path.join(opts.serverlibDir, "stats.json");
+  const stats = JSON.parse(fs.readFileSync(statsPath, "utf-8"));
   const { url, error } = initials;
-  const { serverlibDir, publicDir } = opts;
-  const stats = JSON.parse(
-    fs.readFileSync(path.join(serverlibDir, "stats.json")).toString()
-  );
-  const { builtAt } = stats;
+  const headers = { ...initials.headers, "x-build-time": stats.builtAt };
+  const initialData = JSON.stringify({ url, headers });
+  const title = "Error!";
   const assets = getAssets({
     assets: stats.namedChunkGroups.error.assets,
-    publicDir,
+    publicDir: opts.publicDir,
     publicPath: stats.publicPath,
     fileSystem: opts.fs || fs,
   });
-  const route = match(url);
-  const { pathname, search, destination } = route;
-  const initProps = {
-    builtAt,
-    favicon: icon,
-    ...initials,
-    route: { pathname, search, destination },
-  };
-  let initialData = { ...initProps };
-  initialData = JSON.stringify(initialData);
-  const title = "Error!";
   const doc = `<!doctype html>
 <html>
   <head>
@@ -54,43 +39,21 @@ export async function createError(initials, opts) {
   return doc;
 }
 
-async function getRouteMods({ routeMods }) {
-  const mods = routeMods;
-  const { routes, notfound } = await importRoutes();
-  await Promise.all(
-    routes.map(async (item, index) => {
-      mods[index].Component = await item.Component();
-    })
-  );
-  mods[mods.length - 1].Component = await notfound.Component();
-  return mods;
-}
-
 export async function createDoc(initials, opts) {
-  const { match } = await importRoutes();
-  const { serverlibDir, publicDir } = opts;
-  const { url, isStatic, ...restInitials } = initials;
-  const stats = JSON.parse(
-    fs.readFileSync(path.join(serverlibDir, "stats.json")).toString()
-  );
-  const { builtAt } = stats;
-  const route = match(url);
-  const Component = await route.Component();
-  const getProps = () =>
-    Object.assign(
-      { builtAt, favicon: icon },
-      { url },
-      isStatic === true ? { isStatic } : null,
-      restInitials,
-      { route: { ...route, Component } }
-    );
+  const statsPath = path.join(opts.serverlibDir, "stats.json");
+  const stats = JSON.parse(fs.readFileSync(statsPath, "utf-8"));
+  const url = initials.url;
+  const matched = await match(url);
+  const Component = await matched.Component();
+  const route = { ...matched, Component };
+  const headers = { ...initials.headers, "x-build-time": stats.builtAt };
   let data: Record<string, unknown> | undefined;
   if (typeof Component.getInitialData === "function") {
-    data = await Component.getInitialData(getProps());
+    const dataProps = { url, headers: { ...headers }, route };
+    data = await Component.getInitialData(dataProps);
   }
-  let initialData = { ...getProps(), [route.name]: data };
-  initialData = JSON.stringify(initialData, null, 2);
-  const props = { ...(data || {}), ...getProps() };
+  const initialData = JSON.stringify({ url, headers, ...data }, null, 2);
+  const props: RouteProps = { url, headers, route, ...data };
   const app = <Component {...props} />;
   const content = await new Promise((resolve, reject) => {
     let body = "";
@@ -112,31 +75,32 @@ export async function createDoc(initials, opts) {
     });
   });
 
-  const { namedChunkGroups } = stats;
+  const { publicPath, namedChunkGroups } = stats;
   let clientAssets = namedChunkGroups.client.assets;
-  const routeMods = await getRouteMods(stats);
-  const mod = routeMods.find((item) => item.Component === Component);
-  if (namedChunkGroups[mod.webpackChunkName]) {
-    clientAssets = clientAssets.concat(
-      namedChunkGroups[mod.webpackChunkName].assets
-    );
+  if (route.name !== "404") {
+    const routes = await getRoutes();
+    const mod = routes.find((item) => item.name === route.name);
+    const chunkName = mod._Component[1];
+    if (namedChunkGroups[chunkName]) {
+      clientAssets = clientAssets.concat(namedChunkGroups[chunkName].assets);
+    }
   }
 
   const assets = getAssets({
     assets: clientAssets,
-    publicDir,
-    publicPath: stats.publicPath,
+    publicDir: opts.publicDir,
+    publicPath,
     fileSystem: opts.fs || fs,
   });
 
-  const title = Component.title || "Labs in the garden";
+  const title = props.title || Component.title || "Labs in the garden";
   const doc = `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="${icon}">
-    <link rel="apple-touch-icon" href="${icon}">
+    <link rel="icon" type="image/png" href="${favicon}">
+    <link rel="apple-touch-icon" href="${favicon}">
     <title>${title}</title>
     ${assets.header.join("\n\t")}
   </head>

@@ -4,7 +4,7 @@ const { DefinePlugin } = require("webpack");
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 const { webDir, serverlibDir } = require("../server/dirs.js");
-const { outputPublicPath } = require("../client/paths.js");
+const { outputPublicPath } = require("../client/shared_paths.js");
 const extensions = ["js", "ts", "tsx", "cjs", "mjs"];
 
 class ServerStatsWriterPlugin {
@@ -36,13 +36,13 @@ class ServerStatsWriterPlugin {
 
 const jsRule = [
   {
-    test: new RegExp(`\\.${extensions.join("|")}$`),
+    test: new RegExp(`\\.(${extensions.join("|")})$`),
     exclude: /node_modules/,
     use: {
       loader: "babel-loader",
       options: {
         presets: [
-          ["@babel/preset-env", { targets: "node 16.16" }],
+          ["@babel/preset-env", { targets: "node 14" }],
           ["@babel/preset-react", { runtime: "automatic" }],
           ["@babel/preset-typescript", { allExtensions: true, isTSX: true }],
         ],
@@ -80,6 +80,7 @@ const output = {
   iife: false,
 };
 const server = {
+  name: "server",
   mode,
   devtool: false,
   target,

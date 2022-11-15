@@ -2,7 +2,7 @@ import { useEffect, useState, useDeferredValue, useMemo } from "react";
 import Nav from "./Nav";
 import Loading from "./Loading";
 import { STORAGE_KEY_CITIES } from "./defaultCities";
-import { publicPath, RouteComponent, RouteProps } from "./routes";
+import { publicPath } from "./shared_routes.mjs";
 import "./Setting.css";
 
 // cities, items, byFirstLetter, byPinyin, byAdcode, byName
@@ -167,14 +167,11 @@ const Setting: RouteComponent = (props: SettingProps) => {
     [deferedKeyword]
   );
 
+  const { render, route, headers } = props;
   return (
     <>
       <Loading isLoading={props.isLoading}></Loading>
-      <Nav
-        render={props.render}
-        route={props.route}
-        headers={props.headers}
-      ></Nav>
+      <Nav {...{ render, route, headers }}></Nav>
 
       <h2 className="setting-header">设置</h2>
       <div className="setting setting-city">

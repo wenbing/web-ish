@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import "./AsyncComponent.css";
 import App from "./App";
 
 function AsyncCompnent() {
