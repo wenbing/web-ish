@@ -16,7 +16,7 @@
   "build-server": "npx webpack --config server/webpack.server.js",
   "build": "node server/build.js",
   "build-pages": "node server/build.js --pathname all",
-  "bundle": "node server/bundle.js",
+  "bundle-server": "node --experimental-import-meta-resolve server/bundle.js",
   "server": "node server/server.js"
 }
 ```

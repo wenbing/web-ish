@@ -9,6 +9,7 @@ COPY server server
 COPY posts  posts 
 COPY bootstrap bootstrap 
 COPY README.md README.md 
+RUN npx prettier --check .
 RUN npx tsc -p ./client
 RUN npx eslint .
 RUN NODE_ENV=production node server/build.js

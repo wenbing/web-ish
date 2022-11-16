@@ -37,6 +37,8 @@ jobs:
         with:
           node-version: "16.16"
       - name: Build Static Files And Pages
+        env:
+          WENBING_CREDENTIALS_FILE: ${{ secrets.WENBING_CREDENTIALS_FILE }}
         run: |
           rm -rf public server_lib
           npm install

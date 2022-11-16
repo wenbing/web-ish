@@ -19,7 +19,7 @@ async function prebuildRoutes() {
     __dirname,
     "../client/shared_internal_routes.js"
   );
-  const source = `module.exports = [\n  ${partsSource.join(",\n")},\n]`;
+  const source = `module.exports = [\n${partsSource.join(",\n")},\n]`;
   await writeFile(routespath, source);
 }
 
