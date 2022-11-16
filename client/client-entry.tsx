@@ -34,7 +34,10 @@ function clone<T>(o: T, init = {}) {
     let data;
     if (typeof Component.getInitialData === "function") {
       try {
-        data = await Component.getInitialData(clone(INITIAL_DATA));
+        data = await Component.getInitialData({
+          ...clone(INITIAL_DATA),
+          route,
+        });
       } catch (ex) {
         console.error(ex);
       }

@@ -7,15 +7,21 @@ type NavProps = Partial<RouteProps>;
 const classnames = (...args) => args.filter((x) => x).join(" ");
 
 const handleClick = async (evt, props) => {
+  if (props.error) {
+    return;
+  }
   if (evt.target.tagName !== "A") {
     return;
   }
   const loc = new URL(evt.target.href);
-  const route = await match(`${loc.pathname}${loc.search}`);
-  if (props.route.Component !== (await route.Component())) {
+  if (loc.host !== props.headers.host) {
     return;
   }
-  if (props.error) {
+  const route = await match(`${loc.pathname}${loc.search}`);
+  if (route.destination === null) {
+    return;
+  }
+  if (props.route.Component !== (await route.Component())) {
     return;
   }
   evt.preventDefault();

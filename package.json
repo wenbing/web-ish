@@ -14,7 +14,7 @@
     "uuid": "^9.0.0"
   },
   "scripts": {
-    "test": "npx prettier --write . && npx eslint . && npx tsc -p ./client"
+    "test": "npx prettier --check . && npx eslint . && npx tsc -p ./client"
   },
   "devDependencies": {
     "@babel/core": "^7.19.1",

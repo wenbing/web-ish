@@ -6,6 +6,7 @@ COPY package*.json .npmrc .eslint* .prettierignore ./
 RUN npm i
 COPY client client
 COPY server server 
+COPY posts  posts 
 COPY bootstrap bootstrap 
 COPY README.md README.md 
 RUN npx tsc -p ./client
@@ -23,6 +24,7 @@ RUN npm i
 COPY --from=BUILD /web-ish-build/public public
 COPY --from=BUILD /web-ish-build/server_lib server_lib
 COPY --from=BUILD /web-ish-build/server server
+COPY --from=BUILD /web-ish-build/posts  posts
 COPY --from=BUILD /web-ish-build/bootstrap bootstrap
 COPY --from=BUILD /web-ish-build/README.md README.md 
 CMD ./bootstrap
