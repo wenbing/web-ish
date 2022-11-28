@@ -1,13 +1,27 @@
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-gap: 0;
+}
+
 .card-time {
-  font-family: "LcdD";
+  display: grid;
+  grid-template-rows: max-content 0 1fr;
+  margin: 5px;
+  font-family: LcdD, sans-serif;
   font-style: normal;
   font-size: 3.2rem;
   position: relative;
-  display: block;
   width: 190px;
 }
 
-.card-time .timezone {
+.card-time img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.card-time__timezone {
   position: absolute;
   top: 3px;
   left: 3px;
@@ -16,7 +30,7 @@
   color: darkgrey;
 }
 
-.card-time .countdown {
+.card-time__countdown {
   margin-left: 8px;
 }
 
@@ -32,15 +46,18 @@
   white-space: pre;
   overflow: auto;
 }
+
 .readme ul {
   margin-top: 0.5rem;
   padding-left: 1em;
   overflow: auto;
 }
+
 .readme ul li {
   word-break: break-all;
   white-space: pre-line;
 }
+
 .readme h2 {
   margin-bottom: 0.5rem;
 }

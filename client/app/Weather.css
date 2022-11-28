@@ -1,0 +1,43 @@
+.card-weather {
+  display: grid;
+  grid-template-rows: max-content 0 1fr;
+  margin: 5px;
+}
+
+.card-weather img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.card-weather__info {
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.card-weather__icon,
+.card-weather__text {
+  display: inline-block;
+}
+
+.card-weather__icon {
+  width: 80px;
+  font-size: 3.2rem;
+  text-align: center;
+}
+
+.card-weather__text {
+  width: 100px;
+  text-align: left;
+  font-size: 12px;
+}
+
+.card-weather__temperature {
+  font-size: 1.5rem;
+  margin-left: -1px;
+}
+
+.card-weather__temperature sup {
+  font-size: 12px;
+}

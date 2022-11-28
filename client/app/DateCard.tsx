@@ -25,9 +25,9 @@ function DateCard(props: { date: number }) {
     time = "08:00:00";
   }
   return (
-    <div className="card card-time">
-      <span className="timezone">Beijing</span>
-      <span className="lcdd-font countdown">{time}</span>
+    <div className="card-time">
+      <span className="card-time__timezone">Beijing</span>
+      <span className="lcdd-font card-time__countdown">{time}</span>
     </div>
   );
 }

@@ -1,20 +1,20 @@
 :root {
   --nav-bg-color: #f7f7f7;
-  --content-bg-color: #ffffff;
-  --font-color: rgba(0, 0, 0, 0.9);
+  --content-bg-color: #fff;
+  --text-color: rgb(0 0 0 / 90%);
   --secondary-bg-color: #f9f9fb;
-  --secondary-font-color: #4e4e4e;
+  --secondary-text-color: #4e4e4e;
   --card-bg-color: #f7f7f7;
 }
 
 @font-face {
-  font-family: "LcdD";
+  font-family: LcdD;
   src: url("./LcdD.ttf");
 }
 
 html {
   margin: 0;
-  color: var(--font-color);
+  color: var(--text-color);
   background-color: var(--content-bg-color);
 }
 
@@ -23,13 +23,18 @@ body {
   min-height: 100vh;
 }
 
+pre {
+  word-break: break-all;
+  white-space: pre-line;
+}
+
 .loading {
   position: absolute;
   height: 2px;
   width: 0%;
   overflow: hidden;
-  background-color: rgb(142, 202, 108);
-  color: rgb(142, 202, 108);
+  background-color: rgb(142 202 108);
+  color: rgb(142 202 108);
   margin: 0 100% 0 0;
   transition-property: width;
   transition-duration: 2s;
@@ -40,27 +45,4 @@ body {
   display: block;
   width: 100%;
   margin-right: 0;
-}
-
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  grid-gap: 0px;
-}
-
-.card {
-  display: grid;
-  grid-template-rows: max-content 0px 1fr;
-  margin: 5px;
-}
-
-.card img {
-  object-fit: cover;
-  width: 100%;
-  height: 100%;
-}
-
-pre {
-  word-break: break-all;
-  white-space: pre-line;
 }

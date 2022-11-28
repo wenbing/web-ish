@@ -3,8 +3,8 @@ import { useState, useEffect, Suspense } from "react";
 
 import Nav from "./Nav";
 import Loading from "./Loading";
-import DateCard from "./DateCard";
-import Weather, { fetchInfo, WeatherLives } from "./Weather";
+import DateCard from "./app/DateCard";
+import Weather, { fetchInfo, WeatherLives } from "./app/Weather";
 import withErrorBoundary from "./withErrorBoundary";
 import { publicPath } from "./shared_routes.mjs";
 import defaultCities, { STORAGE_KEY_CITIES } from "./defaultCities";
@@ -16,7 +16,7 @@ const themes = {
 };
 const ThemeContext = React.createContext(themes.light);
 const AsyncCompnent = React.lazy(
-  () => import(/* webpackChunkName: 'async-component' */ "./AsyncComponent")
+  () => import(/* webpackChunkName: 'async-component' */ "./app/AsyncComponent")
 );
 
 interface AppProps extends RouteProps {
@@ -108,9 +108,9 @@ function Mine(props: AppProps) {
 }
 
 const App: RouteComponent = withErrorBoundary((props: AppProps) => {
-  const { isLoading, render, route, headers, error } = props;
+  const { isLoading, render, route, url, headers, error } = props;
   const loading = <Loading isLoading={isLoading}></Loading>;
-  const nav = <Nav {...{ render, route, headers, error }}></Nav>;
+  const nav = <Nav {...{ render, route, url, headers, error }}></Nav>;
   let contents;
   if (props.error) {
     contents = <div className="container">Error!</div>;

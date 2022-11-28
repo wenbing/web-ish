@@ -76,6 +76,7 @@ async function docHandler(req, res, opts) {
 
 const apiHandlers = {
   readme: require("./readme").handler,
+  post: async (props) => (await import("./post.mjs")).handler(props),
 };
 
 async function apiHandler(req, res, opts = {}) {

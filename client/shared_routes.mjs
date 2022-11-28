@@ -17,14 +17,14 @@ const user_routes = [
   },
   {
     name: "blog",
-    source: "/(index)?(\\.html)?",
+    source: "/index(\\.html)?",
     destination: "/index.html",
     Component: ["./Blog", "blog"],
   },
   {
     name: "blog-post",
-    source: "/post/:title([A-Za-z0-9_]+)(\\.html)?",
-    destination: "/post/:title.html",
+    source: "/post/:name([A-Za-z0-9_]+)(\\.html)?",
+    destination: "/post/:name.html",
     Component: ["./Blog", "blog"],
   },
   {
@@ -58,14 +58,14 @@ const _notfound = {
 
 const routeSourceToRegexp = (item) => {
   const keys = [];
-  const source = pathToRegexp(item.source, keys);
+  const sourceRegexp = pathToRegexp(item.source, keys);
   const fn = ptrMatch(item.source, { decode: decodeURIComponent });
 
   let { destination } = item;
   if (destination.indexOf(":") !== -1) {
     destination = ptrCompile(item.source);
   }
-  return { ...item, keys, match: fn, destination };
+  return { ...item, match: fn, destination };
 };
 
 export { user_routes, _notfound, routeSourceToRegexp, _match };
@@ -78,7 +78,9 @@ const notfound = [_notfound].map(routeSourceToRegexp).map(importDefault)[0];
 async function getRoutes() {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  const { default: _routes } = await import("./shared_internal_routes.js");
+  const { default: _routes } = await import(
+    /* webpackMode: 'eager' */ "./shared_internal_routes.js"
+  );
   return _routes.map(routeSourceToRegexp).map(importDefault);
 }
 async function match(url) {
@@ -100,11 +102,25 @@ function _match(url, { publicPath, routes, notfound }) {
   }
   const striped = pathname.slice(publicPath.length);
   const len = routes.length;
+  // eslint-disable-next-line no-undef
+  if (process.env.NODE_ENV === "development") {
+    const matched = [];
+    for (let i = 0; i < len; i++) {
+      const r = routes[i].match(striped);
+      if (r) matched.push(r);
+    }
+    if (matched.length > 1) {
+      let sources;
+      sources = routes.map((route) => route.source).join(", ");
+      sources = JSON.stringify({ pathname, sources }, null, 2);
+      throw new Error(`routes conflict: matched.length > 1, ${sources}`);
+    }
+  }
   for (let i = 0; i < len; i++) {
     const route = routes[i];
     const matched = route.match(striped);
     if (matched) {
-      const { name, Component, source, keys } = route;
+      const { name, Component, source } = route;
       const destination =
         typeof route.destination === "function"
           ? route.destination(matched.params)
@@ -113,7 +129,6 @@ function _match(url, { publicPath, routes, notfound }) {
         name,
         Component,
         source,
-        // keys,
         destination,
         pathname: striped,
         params: matched.params,

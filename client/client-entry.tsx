@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { match } from "./shared_routes.mjs";
 import "./client.css";
 
+if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 const INITIAL_DATA = window.INITIAL_DATA;
 
 function clone<T>(o: T, init = {}) {
@@ -18,17 +19,14 @@ function clone<T>(o: T, init = {}) {
     const matched = await match(INITIAL_DATA.url);
     const Component = await matched.Component();
     const route = { ...matched, Component };
-    const props = {
-      ...clone(INITIAL_DATA),
-      route,
-      render,
-    };
+    const props = { ...clone(INITIAL_DATA), route, render };
     console.log("init props", props);
     return [Component, props];
   }
 
   async function update(loc) {
-    const matched = await match(`${loc.pathname}${loc.search}`);
+    const url = `${loc.pathname}${loc.search}`;
+    const matched = await match(url);
     const Component = await matched.Component();
     const route = { ...matched, Component };
     let data;
@@ -42,7 +40,7 @@ function clone<T>(o: T, init = {}) {
         console.error(ex);
       }
     }
-    props = { ...clone(INITIAL_DATA), ...data, route, render };
+    props = { ...clone(INITIAL_DATA), ...data, url, route, render };
     console.log("update props", props);
     return [Component, props];
   }
@@ -53,6 +51,7 @@ function clone<T>(o: T, init = {}) {
   [Component, props] = await init();
   const root = ReactDOM.hydrateRoot(container, <Component {...props} />);
   async function render(loc) {
+    window.scroll(0, 0);
     root.render(<Component isLoading={true} {...props} />);
     [Component, props] = await update(loc);
     root.render(<Component {...props} />);

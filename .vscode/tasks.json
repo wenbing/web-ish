@@ -6,7 +6,7 @@
     {
       "label": "build",
       "type": "shell",
-      "command": "npx tsc -p ./client && npx eslint . && node --unhandled-rejections=strict server/build.js"
+      "command": "npx prettier --check . && npx tsc -p ./client && npx eslint . && npx stylelint --max-warnings 2 ./client/**/*.css && node --unhandled-rejections=strict server/build.js"
     }
   ]
 }

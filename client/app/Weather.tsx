@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "./Weather.css";
-import fetch from "./fetch";
+import fetch from "../fetch";
 const icons = {
   晴: "☀️",
   云: "☁️",
@@ -98,13 +98,13 @@ export default function Weather(props: WeatherProps) {
   if (city.length > 6) infoStyle.lineHeight = "1rem";
   return (
     <div
-      className={"card card-weather card-weather-" + className}
+      className={"card-weather card-weather-" + className}
       onClick={handleClick}
     >
-      <div className="weather-info">
-        <div className="weather-icon">{icon}</div>
-        <div className="weather-text" style={infoStyle}>
-          <span className="weather-temperature">
+      <div className="card-weather__info">
+        <div className="card-weather__icon">{icon}</div>
+        <div className="card-weather__text" style={infoStyle}>
+          <span className="card-weather__temperature">
             {temperature}
             <sup>℃</sup>
           </span>

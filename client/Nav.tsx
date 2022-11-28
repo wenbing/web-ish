@@ -1,6 +1,7 @@
+import { useEffect, useRef, useState } from "react";
+
 import { match, publicPath } from "./shared_routes.mjs";
 import "./Nav.css";
-import { useEffect, useRef, useState } from "react";
 import favicon from "./icon.png";
 
 type NavProps = Partial<RouteProps>;
@@ -58,23 +59,36 @@ function Nav(props: NavProps) {
     href: string;
     className?: string;
     filter?: () => boolean;
-  }[] = [
-    { label: "Blog", href: "/index.html" },
-    { label: "Readme", href: "/readme.html" },
-    { label: "Weixin", href: "/weixin" },
-    { label: "Weather", href: "/mine.html" },
-    { label: "Setting", href: "/setting.html" },
-  ];
+  }[];
+  const isBlogHost = props.headers.host === "blog.zhengwenbing.com";
+  if (isBlogHost) {
+    items = [
+      { label: "Blog", href: "/index.html" },
+      { label: "Weixin", href: "/weixin" },
+    ];
+  } else {
+    items = [
+      { label: "Blog", href: "/index.html" },
+      { label: "Readme", href: "/readme.html" },
+      { label: "Weixin", href: "/weixin" },
+      { label: "Weather", href: "/mine.html" },
+      { label: "Setting", href: "/setting.html" },
+    ];
+  }
+
   items = items.filter((item) => {
     if (typeof item.filter === "function") return item.filter();
     return true;
   });
   items = items.map((item) => {
-    const className = props.url === item.href ? "nav-link-current" : "";
-    return { ...item, className };
+    const classnames = [];
+    if (props.url === `${publicPath}${item.href}`) {
+      classnames.push("nav-link--current");
+    }
+    return { ...item, className: classnames.join(" ") };
   });
   const list = (
-    <ul className={"nav-item-group"}>
+    <ul className={"nav-itemgroup"}>
       {items.map((item) => (
         <li className="nav-item" key={item.label}>
           <a

@@ -148,6 +148,7 @@ const Setting: RouteComponent = (props: SettingProps) => {
   );
   const toggleIsSearching = (evt) => {
     evt.preventDefault();
+    evt.stopPropagation();
     setIsSearching(!isSearching);
   };
 
@@ -167,16 +168,16 @@ const Setting: RouteComponent = (props: SettingProps) => {
     [deferedKeyword]
   );
 
-  const { render, route, headers } = props;
+  const { render, route, url, headers } = props;
   return (
     <>
       <Loading isLoading={props.isLoading}></Loading>
-      <Nav {...{ render, route, headers }}></Nav>
+      <Nav {...{ render, route, url, headers }}></Nav>
 
       <h2 className="setting-header">设置</h2>
       <div className="setting setting-city">
         <p>
-          <span className="setting-city-list">
+          <span className="setting-citylist">
             城市：
             {selected.map(({ adcode, name }) => (
               <span key={adcode}>{name}</span>
@@ -184,7 +185,7 @@ const Setting: RouteComponent = (props: SettingProps) => {
           </span>
           <a
             href="?select-cities"
-            className="setting-city-select"
+            className="setting-cityselect"
             onClick={toggleIsSearching}
           >
             选择

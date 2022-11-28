@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "jsx": "react-jsx",
-    "typeRoots": ["./", "node_modules/@types"]
+    "typeRoots": ["./types", "node_modules/@types"]
   },
   "include": ["./**/*"]
 }

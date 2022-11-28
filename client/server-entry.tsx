@@ -126,7 +126,9 @@ function getAssets({ assets, publicDir, publicPath, fileSystem }) {
       switch (extname) {
         case ".js":
           if (!item.name.endsWith(".hot-update.js")) {
-            acc.body.push(`<script src="${publicPath}${item.name}"></script>`);
+            acc.body.push(
+              `<script defer src="${publicPath}${item.name}"></script>`
+            );
           }
           break;
         case ".css":

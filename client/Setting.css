@@ -28,6 +28,7 @@
   font-size: large;
   width: 300px;
 }
+
 .setting-city input:focus-visible {
   outline: 1px solid skyblue;
 }
@@ -40,18 +41,19 @@
 .setting-city ul li {
   padding-bottom: 0.5rem;
 }
+
 .setting-city ul li:hover {
   text-decoration: underline;
   cursor: default;
 }
 
-.setting-city-select {
+.setting-cityselect {
   min-width: 50px;
   text-align: right;
-  color: var(--font-color);
+  color: var(--text-color);
 }
 
-.setting-city-list span {
+.setting-citylist span {
   padding-right: 0.5rem;
   display: inline-block;
 }

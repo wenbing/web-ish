@@ -1,3 +1,5 @@
+if (process.env.NODE_ENV === undefined) process.env.NODE_ENV = "development";
+
 const path = require("path");
 const webpack = require("webpack");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -49,6 +51,7 @@ const output = {
   path: publicDir,
   filename: "[name].js",
   chunkFilename: "[name].js",
+  assetModuleFilename: "[name]-[hash][ext]",
   publicPath: outputPublicPath,
 };
 const miniCssOpts = { filename: "[name].css", chunkFilename: "[name].css" };
@@ -101,14 +104,22 @@ const client = {
 if (mode === "development") {
   client.devtool = "eval-source-map";
   // client.devtool = "source-map";
+  const writeToDisk = (filepath) => {
+    return !/\.hot-update\./.test(filepath);
+  };
   client.devServer = {
     hot: true,
     // port: 3000,
     port: 80,
     allowedHosts: [".zhengwenbing.com"],
     setupMiddlewares,
-    static: { directory: publicDir, publicPath },
-    devMiddleware: { publicPath },
+    static: {
+      directory: publicDir,
+      publicPath,
+      serveIndex: false,
+      watch: false,
+    },
+    devMiddleware: { publicPath, writeToDisk },
   };
 } else if (mode === "production") {
   const cacheGroups = {

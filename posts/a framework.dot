@@ -1,0 +1,120 @@
+
+digraph a_framework {
+	graph [
+		label = "build a web-ish framework \n\n"
+		labelloc = t
+		fontname = "Helvetica,Arial,sans-serif"
+		fontsize = 20
+		layout = dot
+		newrank = true
+        rankdir=LR
+	]
+
+	node [
+		shape=record
+		style=filled
+		fillcolor=gray95
+		fontname="Helvetica,Arial,sans-serif"
+	]
+
+	edge [
+        arrowhead=normal 
+		fontname="Helvetica,Arial,sans-serif"
+
+		arrowsize=0.4
+		labeldistance=3
+		labelfontcolor="#00000080"
+		penwidth=1
+		style=dotted // dotted style symbolizes data transfer
+    ]
+
+    hosting [
+        label="MultiCloud\nfunction | service"
+        shape=polygon,
+        sides=11
+    ]
+    client [
+        shape=plain
+        label=<<table border="1" cellspacing="0" cellborder="0" cellpadding="4">
+        <tr><td><b>client/…</b></td></tr>
+        <tr><td port="routes" align="left"><i>routes:</i></td></tr>
+        <tr><td port="user_routes" align="left">    user_routes</td></tr>
+        <tr><td port="used_routes" align="left">    used_routes      </td></tr>
+        <tr><td port="components" align="left"><i>components:</i></td></tr>
+        <tr><td port="loading" align="left">    Loading  </td></tr>
+        <tr><td port="nav" align="left">    Nav  </td></tr>
+        <tr><td port="rest" align="left">    …  </td></tr>
+        <tr><td port="assets" align="left"><i>assets</i></td></tr>
+        </table>>
+    ]
+    server [
+        shape=plain
+        label=<<table border="1" cellspacing="0" cellborder="0" cellpadding="4">
+        <tr><td><b>server/…</b></td></tr>
+        <tr><td port="stats" align="left"><i>stats</i></td></tr>
+        <tr><td port="handlers" align="left"><i>handlers:</i></td></tr>
+        <tr><td port="api_handler" align="left">    api handler</td></tr>
+        <tr><td port="doc_handler" align="left">    doc handler</td></tr>
+        <tr><td port="static_handler" align="left">    static handler    </td></tr>
+        <tr><td port="bundler" align="left"><i>bundler  </i></td></tr>
+        <tr><td port="server" align="left"><i>server  </i></td></tr>
+        </table>>
+    ]
+    props [
+        label="type props: \{ url, headers, … \}"
+        label=<<table border="0" cellspacing="0" cellborder="0" cellpadding="4">
+        <tr><td port="head"><b>props</b></td></tr>
+        <tr><td align="left">url, headers       </td></tr>
+        <tr><td align="left">route, …</td></tr>
+        </table>>
+    ]
+    dev_environment [
+        label=<<table border="0" cellspacing="0" cellborder="0" cellpadding="4">
+        <tr><td>DevEnvironment</td></tr>
+        <tr><td align="left">Prebuilt Routes</td></tr>
+        <tr><td align="left">Hot Module Replacement</td></tr>
+        <tr><td align="left">Stats Writer</td></tr>
+        <tr><td align="left">…</td></tr>
+        </table>>
+    ]
+
+	edge [ style=solid ]
+    client -> client_entry [dir=none]
+    server -> server_entry [dir=none]
+	edge [ style=dashed ]
+
+    client_entry -> artifact [label="build"]
+    server_entry -> artifact [label="bundle"]
+    artifact -> hosting [label="upload"]
+
+    client_entry -> image [label="build"]
+    server_entry -> image [label="bootstrap"]
+    image -> hosting [dir=back, label="pull", arrowtail=empty]
+
+    client:user_routes -> client:used_routes
+    server:stats -> server:doc_handler
+    client:routes -> server_entry [arrowtail=empty]
+
+    props:head -> client_entry [dir=none]
+    props:head -> server_entry [dir=none]
+
+    client_entry -> dev_environment
+    server_entry -> dev_environment
+
+    subgraph cluster_code_structure {
+        label="code structure";
+        labeljust=c;
+        peripheries=0;
+        server;
+        props;
+        client;
+    }
+    subgraph cluster_production {
+        label="production";
+        labeljust=c;
+        peripheries=1;
+        artifact;
+        image;
+        hosting;
+    }
+}

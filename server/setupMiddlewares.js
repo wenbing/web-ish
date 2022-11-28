@@ -1,67 +1,48 @@
 const fs = require("fs");
+const { readFile, writeFile } = require("fs/promises");
 const path = require("path");
 const http = require("http");
-const { promisify } = require("util");
 const webpack = require("webpack");
-const clearRequireCache = require("clear-require-cache");
 const { v4: uuidv4 } = require("uuid");
-
-const middlewareName = "render middleware";
-const readFile = promisify(fs.readFile);
-const writeFile = promisify(fs.writeFile);
+const clearRequireCache = require("clear-require-cache");
 const webpackServerConfig = require("../server/webpack.server");
-const serverCompiler = webpack(webpackServerConfig);
 const dirs = require("./dirs");
 const { webDir } = dirs;
 
-function logWebpackServer({ logger, stats }) {
-  logger.info("server compiler start");
-  console.info(stats.toString({ chunks: false, colors: true }));
-  logger.info("server compiler end");
-}
-
-function importRoutes(id) {
-  return import(`../client/shared_routes.mjs?id=${id}`);
-}
-
-function clearRoutes() {
-  const routespath = path.resolve(
-    __dirname,
-    "../client/shared_internal_routes.js"
-  );
-  const source = `module.exports = []`;
-  fs.writeFileSync(routespath, source);
-}
-
 const setupMiddlewares = (middlewares, devServer) => {
-  const clientCompiler = devServer.compiler;
-  const logger = clientCompiler.getInfrastructureLogger(middlewareName);
+  const mwName = "render middleware";
+  const compilers = [devServer.compiler, webpack(webpackServerConfig)];
+  const [clientCompiler, serverCompiler] = compilers;
+  const logger = clientCompiler.getInfrastructureLogger(mwName);
   const outputFileSystem = clientCompiler.outputFileSystem;
 
   let serverCompilerInvalid = null;
-  serverCompiler.hooks.invalid.tap(middlewareName, (filename) => {
-    if (filename.endsWith("server-entry.tsx"))
+  const hookInvalid = (filename) => {
+    if (filename.endsWith("server-entry.tsx")) {
       serverCompilerInvalid = path.relative(clientCompiler.context, filename);
-  });
-  serverCompiler.watch({}, (err, stats) => {
+      logger.info(`server compiler invalid tapped, ${serverCompilerInvalid}`);
+    }
+  };
+  const hookDone = (stats) => {
     logWebpackServer({ logger, stats });
-    if (err) throw err; // 1)what occurred?
     if (serverCompilerInvalid) {
       const clients = devServer.webSocketServer.clients;
       devServer.sendMessage(clients, "static-changed", serverCompilerInvalid);
       serverCompilerInvalid = null;
     }
-  });
+  };
+  serverCompiler.hooks.invalid.tap(mwName, hookInvalid);
+  serverCompiler.hooks.done.tap(mwName, hookDone);
 
   clearRoutes();
+  serverCompiler.watch({}, () => {});
 
   const middleware = async (req, res, next) => {
-    const reqId = uuidv4();
     logger.info(req.method, req.url);
     const handlerPath = require.resolve("./handler");
     clearRequireCache(handlerPath);
 
-    const { publicPath } = await importRoutes(reqId);
+    const { publicPath } = await import(`../client/shared_routes.mjs`);
     if (!req.url.startsWith(publicPath)) {
       return next();
     }
@@ -73,13 +54,14 @@ const setupMiddlewares = (middlewares, devServer) => {
     }
 
     if (checkFile(req, res, { publicPath, fs: outputFileSystem })) {
-      console.log(`There is a file, '${middlewareName}' will not process.`);
+      console.log(`There is already a file, '${mwName}' will not process.`);
       return next();
     }
 
     if (isDoc) {
-      const compilers = [clientCompiler, serverCompiler];
-      await writeRoutes({ url: req.url, reqId, compilers });
+      const id = uuidv4();
+      logger.info("    " + JSON.stringify({ "x-request-id": id }));
+      await writeRoutes({ url: req.url, id, compilers });
       clearRequireCache(handlerPath);
     }
 
@@ -91,27 +73,30 @@ const setupMiddlewares = (middlewares, devServer) => {
       safeRespond(req, res, { is, error });
     }
   };
-  middlewares.unshift({ name: middlewareName, middleware });
+  middlewares.unshift({ name: mwName, middleware });
   return middlewares;
 };
 
 module.exports = setupMiddlewares;
 
-function safeRespond(req, res, { is, error }) {
-  const statusCode = error.statusCode || 500;
-  const contentType = is.doc ? "text/html" : "application/json";
-  const headers = { "Content-Type": contentType };
-  const statusMessage = http.STATUS_CODES[statusCode];
-  if (!res.headersSent) res.writeHead(statusCode, statusMessage, headers);
-  const body = is.doc
-    ? error.message
-    : JSON.stringify({ code: error.code || -1, message: error.message });
-  if (!res.writableEnded) res.end(body);
+function logWebpackServer({ logger, stats }) {
+  logger.info("server compiler start");
+  logger.info(stats.toString({ chunks: false, colors: true }));
+  logger.info("server compiler end");
 }
 
-async function writeRoutes({ url, reqId, compilers }) {
+function clearRoutes() {
+  const internalRoutesPath = path.resolve(
+    __dirname,
+    "../client/shared_internal_routes.js"
+  );
+  const source = `module.exports = []`;
+  fs.writeFileSync(internalRoutesPath, source);
+}
+
+async function writeRoutes({ url, id, compilers }) {
   const { _match, user_routes, _notfound, publicPath, routeSourceToRegexp } =
-    await importRoutes(reqId);
+    await import(`../client/shared_routes.mjs?id=${id}`);
   const result = _match(url, {
     publicPath,
     routes: user_routes.map(routeSourceToRegexp),
@@ -126,26 +111,24 @@ async function writeRoutes({ url, reqId, compilers }) {
   const parts = user_routes.filter(
     ({ Component }) => relfile === path.join(clientpath, Component[0])
   );
-  const routespath = path.resolve(
+  const internalRoutesPath = path.resolve(
     __dirname,
     "../client/shared_internal_routes.js"
   );
   const { toSource } = await import("./routeToSource.mjs");
   const partsSource = await Promise.all(parts.map(toSource));
   const source = `module.exports = [\n${partsSource.join(",\n")},\n]`;
-  const contents = await readFile(routespath, "utf8");
+  const contents = await readFile(internalRoutesPath, "utf8");
   if (contents === source) {
     return;
   }
-  const done = compilers.map(
-    (compiler) =>
-      new Promise((resolve) =>
-        compiler.hooks.done.tap("write routes", () => resolve(null))
-      )
-  );
-  const write = writeFile(routespath, source);
-  const promises = done.concat(write);
-  await Promise.all(promises);
+  const write = writeFile(internalRoutesPath, source);
+  const hooks = (compiler) =>
+    new Promise((resolve, reject) => {
+      compiler.hooks.done.tap("write routes", (/* stats */) => resolve(null));
+      compiler.hooks.failed.tap("write routes", (err) => reject(err));
+    });
+  await Promise.all(compilers.map(hooks).concat(write));
 }
 
 function checkFile(req, res, { fs, publicPath }) {
@@ -161,4 +144,16 @@ function checkFile(req, res, { fs, publicPath }) {
   } catch (ex) {
     return false;
   }
+}
+
+function safeRespond(req, res, { is, error }) {
+  const statusCode = error.statusCode || 500;
+  const contentType = is.doc ? "text/html" : "application/json";
+  const headers = { "Content-Type": contentType };
+  const statusMessage = http.STATUS_CODES[statusCode];
+  if (!res.headersSent) res.writeHead(statusCode, statusMessage, headers);
+  const body = is.doc
+    ? error.message
+    : JSON.stringify({ code: error.code || -1, message: error.message });
+  if (!res.writableEnded) res.end(body);
 }

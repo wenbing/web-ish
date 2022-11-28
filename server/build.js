@@ -3,6 +3,7 @@ const path = require("path");
 const webpack = require("webpack");
 const cp = require("child_process");
 const { promisify } = require("util");
+if (process.env.NODE_ENV === undefined) process.env.NODE_ENV = "development";
 
 const promisifiedWriteFile = promisify(fs.writeFile);
 const clientWebpackConfig = require("../server/webpack.client.js");
@@ -24,12 +25,7 @@ async function prebuildRoutes() {
 }
 
 function build() {
-  const compiler = webpack([
-    clientWebpackConfig,
-    Object.assign(serverWebpackConfig, {
-      dependencies: ["client"],
-    }),
-  ]);
+  const compiler = webpack([clientWebpackConfig, serverWebpackConfig]);
   return new Promise((resolve, reject) => {
     compiler.run(async (err, stats) => {
       if (err) return reject(err);

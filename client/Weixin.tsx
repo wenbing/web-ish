@@ -82,7 +82,7 @@ const Weixin: RouteComponent = (props: WeixinProps) => {
   return (
     <>
       <Loading isLoading={props.isLoading}></Loading>
-      <Nav {...{ render, route, headers }}></Nav>
+      <Nav {...{ render, route, url, headers }}></Nav>
       <div className="article weui-article" style={{ margin: "5px" }}>
         {inWeixin && <h2>Wei xin</h2>}
         <p>inWeixin: {inWeixin ? "true" : "false"}</p>

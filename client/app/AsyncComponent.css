@@ -1,4 +1,7 @@
 .card-count {
+  display: grid;
+  grid-template-rows: max-content 0 1fr;
+  margin: 5px;
   font-size: 20px;
   cursor: default;
   user-select: none;
@@ -6,7 +9,7 @@
   line-height: 72px;
 }
 
-.card-count .count {
+.card-count__count {
   min-width: 36px;
   display: inline-block;
   text-align: center;

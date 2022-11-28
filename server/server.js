@@ -1,3 +1,5 @@
+if (process.env.NODE_ENV === undefined) process.env.NODE_ENV = "development";
+
 const http = require("http");
 const { promisify } = require("util");
 const compression = require("compression");

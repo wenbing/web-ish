@@ -1,6 +1,9 @@
 # how to make the web-ish
 
-## contents
+## the blog
 
-- the blog
-- the framework
+![a_blog]()
+
+## the framework
+
+![a_framework]()

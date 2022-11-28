@@ -75,12 +75,14 @@ const defines = {
 };
 const output = {
   path: serverlibDir,
-  library: { type: "commonjs2" },
-  publicPath: outputPublicPath,
   iife: false,
+  library: { type: "commonjs2" },
+  assetModuleFilename: "[name]-[hash][ext]",
+  publicPath: outputPublicPath,
 };
 const server = {
   name: "server",
+  dependencies: ["client"],
   mode,
   devtool: false,
   target,
