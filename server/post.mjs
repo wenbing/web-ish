@@ -77,7 +77,7 @@ export async function getCurrentPost({ name }) {
   return { contents };
 }
 
-export async function getAllPosts({}) {
+export async function getAllPosts() {
   const dtOpts = {
     year: "numeric",
     month: "numeric",
