@@ -76,9 +76,9 @@ const importDefault = (item) => ({
 });
 const notfound = [_notfound].map(routeSourceToRegexp).map(importDefault)[0];
 async function getRoutes() {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   const { default: _routes } = await import(
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     /* webpackMode: 'eager' */ "./shared_internal_routes.js"
   );
   return _routes.map(routeSourceToRegexp).map(importDefault);
