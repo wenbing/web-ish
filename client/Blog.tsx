@@ -38,7 +38,13 @@ function BlogPost(props) {
   let article;
   if (currentPost) {
     const found = allPosts.filter((item) => item.name === name)[0];
-    const contents = `${currentPost.contents}<p class="blog-article__updatetime">${found.publishTime} 更新。</p>`;
+    let contents;
+    if (currentPost.contents) {
+      contents = currentPost.contents;
+      contents = `${contents}<p class="blog-article__updatetime">${found.publishTime} 更新。</p>`;
+    } else {
+      contents = `<p>获取文章内容失败，请刷新重试，<br/>name: ${name}</p>`;
+    }
     article = (
       <article className="article">
         <div
@@ -52,11 +58,12 @@ function BlogPost(props) {
     );
   } else {
     article = (
-      <article className="blog-article">
-        <>
-          <h2>没有找到文章</h2>
+      <article className="article">
+        <div className="blog-article">
+          <h2>没有找到此文章</h2>
           {name}
-        </>
+        </div>
+        <BlogNav {...props} />
       </article>
     );
   }
@@ -134,12 +141,16 @@ export async function getInitialData(props: TYPE_INITIAL_DATA) {
   } else {
     const token = props.headers.token;
     const name = props.route.params.name;
-    //@TODO jwt expired how to
-    const currentPost = await (
-      await fetch(`${publicPath}/post.json${name ? `?name=${name}` : ""}`, {
-        headers: new Headers({ "x-requested-with": "fetch", token }),
-      })
-    ).json();
-    return { currentPost };
+    if (name) {
+      const uri = `${publicPath}/post/${name}.json`;
+      const headers = new Headers({ "x-requested-with": "fetch", token });
+      const res = await fetch(uri, { headers });
+      if (res.status === 200) {
+        const currentPost = await res.json();
+        return { currentPost };
+      } else {
+        return { currentPost: { contents: undefined } };
+      }
+    }
   }
 }

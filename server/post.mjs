@@ -125,8 +125,6 @@ export async function getAllPosts() {
 }
 
 export async function handler(props) {
-  const { url, headers } = props;
-  const { search } = new URL(`http://${headers.host}${url}`);
-  const params = new URLSearchParams(search.slice(1));
-  return getCurrentPost({ name: params.get("name") });
+  const name = props.params.name;
+  return getCurrentPost({ name });
 }

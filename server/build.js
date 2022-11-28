@@ -105,18 +105,32 @@ async function writeApis() {
   if (pathnames.length === 0) return;
   const { publicPath } = require("../server_lib/render.js");
   const publicDir = dirs.publicDir(publicPath);
-  const { apiHandlers } = require("./handler");
-  const routenames = Object.keys(apiHandlers);
+  const { apiRoutes } = require("./handler");
+  const apinames = (await Promise.all(apiRoutes)).reduce(
+    (acc, { source, toPath, handler, keys, values }) => {
+      if (keys.length === 0) return [...acc, { apiname: source, handler }];
+      if (keys.length > 1) {
+        throw new Error(`unsupported route keys.length: ${keys.length}`);
+      }
+      const [key, vals] = Object.entries(values)[0];
+      const paths = vals.map((val) => {
+        const params = { [key]: val };
+        const apiname = toPath(params);
+        return { apiname, handler, params };
+      });
+      return [...acc, ...paths];
+    },
+    []
+  );
   console.log("\nwrite apis:");
-  const renderApi = async (routename) => {
-    const url = `${publicPath}/${routename}.json`;
-    const props = getStaticProps({ url });
-    const contents = JSON.stringify(await apiHandlers[routename](props));
-    const filepath = path.join(publicDir, url.slice(publicPath.length));
+  const renderApi = async ({ apiname, handler, params }) => {
+    const props = getStaticProps({ url: apiname });
+    const contents = JSON.stringify(await handler({ ...props, params }));
+    const filepath = path.join(publicDir, apiname.slice(publicPath.length));
     console.log(`${path.relative(webDir, filepath)} success.`);
     return writeFile(filepath, contents);
   };
-  return Promise.all(routenames.map(renderApi));
+  return Promise.all(apinames.map(renderApi));
 }
 
 if (require.main === module) {

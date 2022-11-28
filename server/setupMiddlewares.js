@@ -58,7 +58,7 @@ const setupMiddlewares = (middlewares, devServer) => {
       return next();
     }
 
-    if (isDoc) {
+    if (is.doc) {
       const id = uuidv4();
       logger.info("    " + JSON.stringify({ "x-request-id": id }));
       await writeRoutes({ url: req.url, id, compilers });

@@ -8,9 +8,11 @@ const INITIAL_DATA = window.INITIAL_DATA;
 
 function clone<T>(o: T, init = {}) {
   return Object.keys(o).reduce((acc, key) => {
-    if (Array.isArray(o[key])) return { ...acc, [key]: [...o[key]] };
-    if (typeof o[key] === "object") return { ...acc, [key]: { ...o[key] } };
-    return { ...acc, [key]: o[key] };
+    const val = o[key];
+    if (val === null) return { ...acc, [key]: val };
+    if (Array.isArray(o[key])) return { ...acc, [key]: [...val] };
+    if (typeof val === "object") return { ...acc, [key]: { ...val } };
+    return { ...acc, [key]: val };
   }, init as T);
 }
 

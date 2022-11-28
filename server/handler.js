@@ -4,6 +4,11 @@ const path = require("path");
 const serveHandler = require("serve-handler");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
+const {
+  pathToRegexp,
+  match: ptrMatch,
+  compile: ptrCompile,
+} = require("path-to-regexp");
 
 const dirs = require("../server/dirs.js");
 const { serverlibDir } = dirs;
@@ -11,7 +16,7 @@ let credentials = process.env.WENBING_CREDENTIALS_FILE;
 if (fs.existsSync(credentials))
   credentials = fs.readFileSync(credentials, "utf8");
 const secret = JSON.parse(credentials).API_TOKEN_SECRET;
-const importRender = () => require("../server_lib/render");
+const { publicPath } = require("../server_lib/render");
 
 function isDoc(req) {
   const pathname =
@@ -27,7 +32,6 @@ function isDoc(req) {
 }
 
 function isApi(req /*, res, opts*/) {
-  const { publicPath } = importRender();
   const isApiEndpoint = req.url.startsWith(`${publicPath}/api/`);
   const isFetchRequest =
     (req.headers["x-requested-with"] || "").toLowerCase() === "fetch";
@@ -52,7 +56,7 @@ function getProps(req, res, props = {}) {
 }
 
 async function docHandler(req, res, opts) {
-  const { createDoc, createError } = importRender();
+  const { createDoc, createError } = require("../server_lib/render");
   const tokenPayload = { sub: "API" };
   const tokenOpts = { algorithm: "HS256", expiresIn: "7200s" };
   const token = jwt.sign(tokenPayload, secret, tokenOpts);
@@ -74,35 +78,51 @@ async function docHandler(req, res, opts) {
   }
 }
 
-const apiHandlers = {
-  readme: require("./readme").handler,
-  post: async (props) => (await import("./post.mjs")).handler(props),
+const sourceToHandlers = {
+  "/readme": require("./readme").handler,
+  "/post/:name([A-Za-z0-9_]+)\\.json": async (props) =>
+    (await import("./post.mjs")).handler(props),
 };
 
+const apiRoutes = Object.entries(sourceToHandlers).map(
+  async ([source, handler]) => {
+    const keys = [];
+    pathToRegexp(source, keys);
+    let values; // Custom Matching Parameters
+    if (source === "/post/:name([A-Za-z0-9_]+)\\.json") {
+      const { getAllPosts } = await import("./post.mjs");
+      const names = (await getAllPosts()).map((item) => item.name);
+      values = { name: names };
+    }
+    const s = `${publicPath}${source}`;
+    const match = ptrMatch(s, { decode: decodeURIComponent });
+    const toPath = ptrCompile(s, { decode: decodeURIComponent });
+    return { source: s, match, toPath, handler, keys, values };
+  }
+);
+
 async function apiHandler(req, res, opts = {}) {
+  const apiHeaders = { "Content-Type": "application/json" };
   const _404 = () => {
     const statusCode = 404;
     res.writeHead(statusCode, http.STATUS_CODES[statusCode], apiHeaders);
     res.end(JSON.stringify(http.STATUS_CODES[statusCode]));
   };
-  const { publicPath } = importRender();
   const headers = req.headers;
   const { pathname, search } = new URL(`http://${headers.host}${req.url}`);
-  const apiName = pathname;
-  const extname = path.extname(apiName);
+  const extname = path.extname(pathname);
   if (extname !== ".json") {
     return _404();
   }
-  const apiRoutes = Object.keys(apiHandlers).reduce(
-    (acc, routename) => ({
-      ...acc,
-      [`${publicPath}/${routename}.json`]: apiHandlers[routename],
-    }),
-    {}
-  );
-  const handler = apiRoutes[apiName];
-  const apiHeaders = { "Content-Type": "application/json" };
-  if (!handler) {
+  let matched;
+  for (let { source, match, handler } of await Promise.all(apiRoutes)) {
+    const result = match(pathname);
+    if (result) {
+      matched = { source, params: result.params, handler };
+      break;
+    }
+  }
+  if (!matched) {
     return _404();
   }
   const params = new URLSearchParams(search.slice(1));
@@ -111,15 +131,14 @@ async function apiHandler(req, res, opts = {}) {
     throw new Error(`token is required`);
   }
   jwt.verify(token, secret, { algorithms: "HS256" });
-  const props = getProps(req, res);
-  const results = await handler(props, opts);
+  const props = { ...getProps(req, res), params: matched.params };
+  const results = await matched.handler(props, opts);
   res.writeHead(200, apiHeaders);
   res.write(JSON.stringify(results));
   res.end();
 }
 
 async function reqHandler(req, res, opts) {
-  const { publicPath } = importRender();
   if (!req.url.startsWith(publicPath)) {
     throw new Error(`req.url should startsWith ${publicPath}: ${req.url}`);
   }
@@ -147,9 +166,9 @@ async function reqHandler(req, res, opts) {
 module.exports = {
   isDoc,
   isApi,
+  apiRoutes,
   docHandler,
   apiHandler,
-  apiHandlers,
   reqHandler,
 };
 
