@@ -1,3 +1,8 @@
+@font-face {
+  font-family: LcdD;
+  src: url("./LcdD.ttf");
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

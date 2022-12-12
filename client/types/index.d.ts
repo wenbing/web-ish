@@ -2,6 +2,17 @@ declare module "*.png" {
   const content: string;
   export default content;
 }
+
+declare module "*.webp" {
+  const content: string;
+  export default content;
+}
+
+declare module "*.svg" {
+  const content: string;
+  export default content;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface TYPE_INITIAL_DATA extends Record<string, any> {
   url: string;

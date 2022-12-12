@@ -1,20 +1,22 @@
 import path from "path";
 import { stat as fspStat, readdir, readFile } from "fs/promises";
 import { marked, Renderer, TextRenderer } from "marked";
+import { promisify } from "util";
 import { readFileSync } from "fs";
 import { intlFormat } from "date-fns";
+import imageSize from "image-size";
 
 import dirs from "./dirs.js";
 import render from "../server_lib/render.js";
-const { publicPath } = render;
 
+const { publicPath } = render;
 const publicDir = dirs.publicDir(publicPath);
 const postsDir = path.join(
   path.dirname(new URL(import.meta.url).pathname),
   "../posts/"
 );
-const replace = (t) => t.replace(/[\s-]/g, "_");
-const image = (href, title, text) => {
+const replaceName = (t) => t.replace(/[\s-]/g, "_");
+const getBlogAssets = () => {
   const statfile = path.join(
     path.dirname(new URL(import.meta.url).pathname),
     "../server_lib/stats.json"
@@ -26,16 +28,66 @@ const image = (href, title, text) => {
     (acc, { name }) => ({ ...acc, [fname(name)]: name }),
     {}
   );
-  const name = text;
-  const imgSrc = path.join(publicPath, assets[name]);
-  const filepath = path.join(publicDir, assets[name]);
-  const contents = readFileSync(filepath, "utf-8");
-  const rp = /viewBox="[\d\.]+ [\d\.]+ ([\d\.]+) ([\d\.]+)"/;
-  const [_, width, height] = contents.match(rp);
-  const w = `width="${width}"`;
-  return `<img src="${imgSrc}" title="${title || text}" alt="${text}" ${w}/>`;
+  return assets;
 };
-const renderer = { image };
+const getImageSize = (relpath) => {
+  const extname = path.extname(relpath);
+  switch (extname) {
+    case ".svg":
+    case ".webp": {
+      const filepath = path.join(publicDir, relpath);
+      return imageSize(filepath);
+    }
+    default:
+      return null;
+  }
+};
+const imageRenderer = (href, title, text) => {
+  const assets = getBlogAssets();
+  const name = text;
+  const id = name;
+  const defaultSrc = (ratio, fill = "rgb(0 0 0 / 10%)") =>
+    "data:image/svg+xml," +
+    encodeURIComponent(
+      `
+<svg viewBox="0 0 100 ${100 / ratio}" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="100" height="${100 / ratio}" fill="${fill}" />
+</svg>
+  `.trim()
+    );
+
+  const imgSrc = path.join(publicPath, assets[name]);
+  const extname = path.extname(imgSrc);
+  const size = getImageSize(assets[name]);
+  let istyle;
+  let style;
+  let iwidth;
+  let iheight;
+  let ratio = size.width / size.height;
+  if (ratio > 1) {
+    iwidth = 590;
+    iheight = (iwidth / ratio).toFixed(2);
+  } else {
+    iheight = 590;
+    iwidth = (iheight * ratio).toFixed(2);
+  }
+  ratio = ratio.toFixed(2);
+  istyle = `style="width:${iwidth}px; height:${iheight}px; max-width: calc(100vw - 10px); max-height: calc(calc(100vw - 10px) / ${ratio})"`;
+  style = `width="${size.width}px" height="${size.height}px"`;
+  const t = title || text;
+  return [
+    `<div class="blog-article__image" ${istyle} data-ratio=${ratio}>`,
+    `  <img id="${id}" class="image--lazy" src="${defaultSrc(
+      ratio
+    )}" data-src="${imgSrc}" title="${t}" alt="${text}" ${style} />`,
+    `</div>`,
+    `<span class="blog-article__imagetitle">${name}</span>`,
+  ].join("");
+};
+const listRenderer = (body, ordered, start) => {
+  return `<ul class="blog-article__list">${body}</ul>`;
+};
+const renderer = { image: imageRenderer, list: listRenderer };
 marked.use({ renderer });
 
 // https://marked.js.org/using_pro#renderer
@@ -64,7 +116,7 @@ export async function getCurrentPost({ name }) {
     return null;
   }
   const found = posts.filter((item) => {
-    const filename = replace(path.basename(item, path.extname(item)));
+    const filename = replaceName(path.basename(item, path.extname(item)));
     return filename === name;
   });
   if (found.length === 0) {
@@ -73,8 +125,20 @@ export async function getCurrentPost({ name }) {
   const current = found[0];
   let contents = await readFile(path.join(postsDir, current), "utf8");
 
-  contents = marked.parse(contents, { headerIds: true });
-  return { contents };
+  const images = [];
+  const assets = getBlogAssets();
+  const walkTokens = (token) => {
+    if (token.type === "image") {
+      const name = token.text;
+      const id = name;
+      const href = path.join(publicPath, assets[name]);
+      const size = getImageSize(assets[name]);
+      images.push({ id, href, ...size });
+    }
+  };
+  contents = marked.parse(contents, { headerIds: true, walkTokens });
+
+  return { contents, images };
 }
 
 export async function getAllPosts() {
@@ -90,7 +154,7 @@ export async function getAllPosts() {
   let posts = (await readdir(postsDir))
     .filter((item) => path.extname(item) === ".md")
     .map(async (item) => {
-      const name = replace(path.basename(item, path.extname(item)));
+      const name = replaceName(path.basename(item, path.extname(item)));
       const href = publicPath + "/post/" + name + ".html";
       const fp = path.join(postsDir, item);
       const stat = await fspStat(fp);

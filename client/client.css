@@ -1,21 +1,23 @@
 :root {
-  --nav-bg-color: #f7f7f7;
-  --content-bg-color: #fff;
-  --text-color: rgb(0 0 0 / 90%);
-  --secondary-bg-color: #f9f9fb;
-  --secondary-text-color: #4e4e4e;
-  --card-bg-color: #f7f7f7;
+  color-scheme: light dark;
+
+  --bg-color: #f5f7f0;
+  --ft-color: #222;
+  --secondary-ft-color: #4e4e4e;
 }
 
-@font-face {
-  font-family: LcdD;
-  src: url("./LcdD.ttf");
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #181a0e;
+    --ft-color: #e5e7d5;
+    --secondary-ft-color: #c5c5c5;
+  }
 }
 
 html {
   margin: 0;
-  color: var(--text-color);
-  background-color: var(--content-bg-color);
+  color: var(--ft-color);
+  background-color: var(--bg-color);
 }
 
 body {

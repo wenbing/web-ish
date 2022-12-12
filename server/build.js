@@ -1,14 +1,16 @@
+if (process.env.NODE_ENV === undefined) process.env.NODE_ENV = "development";
+
 const fs = require("fs");
 const path = require("path");
 const webpack = require("webpack");
 const cp = require("child_process");
 const { promisify } = require("util");
-if (process.env.NODE_ENV === undefined) process.env.NODE_ENV = "development";
 
 const promisifiedWriteFile = promisify(fs.writeFile);
 const clientWebpackConfig = require("../server/webpack.client.js");
 const serverWebpackConfig = require("../server/webpack.server.js");
 const dirs = require("../server/dirs.js");
+const parseArgv = require("./parseArgv.js");
 const { webDir, serverlibDir } = dirs;
 
 async function prebuildRoutes() {
@@ -51,30 +53,8 @@ function getStaticProps({ url }) {
   };
 }
 
-async function getStaticPathnames() {
-  const { pathname } = parseArgv();
-  if (pathname === "all") {
-    const {
-      getRoutes,
-      notfound,
-      publicPath,
-    } = require("../server_lib/render.js");
-    const routes = await getRoutes();
-    const pages = []
-      .concat(routes, notfound)
-      .filter((item) => typeof item.destination === "string")
-      .map(({ destination }) => destination);
-    const { getAllPosts } = await import("./post.mjs");
-    const posts = (await getAllPosts()).map(({ href }) =>
-      href.slice(publicPath.length)
-    );
-    return pages.concat(posts);
-  } else {
-    return [].concat.apply([], pathname);
-  }
-}
-
 async function writeDocs() {
+  const { getStaticPathnames } = await import("./static.mjs");
   const pathnames = await getStaticPathnames();
   if (pathnames.length === 0) return;
   async function writeDoc({ pathname }) {
@@ -100,28 +80,28 @@ async function writeDocs() {
   pathnames.forEach((pathname) => writeDoc({ pathname }));
 }
 
-async function writeApis() {
-  const pathnames = await getStaticPathnames();
-  if (pathnames.length === 0) return;
+async function writeManifest() {
   const { publicPath } = require("../server_lib/render.js");
   const publicDir = dirs.publicDir(publicPath);
-  const { apiRoutes } = require("./handler");
-  const apinames = (await Promise.all(apiRoutes)).reduce(
-    (acc, { source, toPath, handler, keys, values }) => {
-      if (keys.length === 0) return [...acc, { apiname: source, handler }];
-      if (keys.length > 1) {
-        throw new Error(`unsupported route keys.length: ${keys.length}`);
-      }
-      const [key, vals] = Object.entries(values)[0];
-      const paths = vals.map((val) => {
-        const params = { [key]: val };
-        const apiname = toPath(params);
-        return { apiname, handler, params };
-      });
-      return [...acc, ...paths];
-    },
-    []
+  const filename = "manifest.webmanifest";
+  const props = getStaticProps({ url: `${publicPath}/${filename}` });
+  const handler = (await import("./manifest.mjs")).handler;
+  const [, , body] = await handler(props);
+  const contents = JSON.stringify(body);
+  const filepath = path.join(publicDir, filename);
+  console.log(`writeFile ${path.relative(webDir, filepath)} success.`);
+  return writeFile(filepath, contents);
+}
+
+async function writeApis() {
+  const { publicPath } = require("../server_lib/render.js");
+  const publicDir = dirs.publicDir(publicPath);
+  const { getStaticPathnames, getStaticApinames } = await import(
+    "./static.mjs"
   );
+  const pathnames = await getStaticPathnames();
+  if (pathnames.length === 0) return;
+  const apinames = getStaticApinames();
   console.log("\nwrite apis:");
   const renderApi = async ({ apiname, handler, params }) => {
     const props = getStaticProps({ url: apiname });
@@ -135,34 +115,20 @@ async function writeApis() {
 
 if (require.main === module) {
   (async function main() {
-    await prebuildRoutes();
-    const stats = await build();
-    console.info(stats.toString({ colors: true }));
-    await cpCitiesJSON();
-    await writeApis();
-    await writeDocs();
-  })();
-}
-
-function parseArgv() {
-  const items = process.argv.slice(2).reverse();
-  const args = {};
-
-  while (items.length > 0) {
-    let key;
-    const item = items.pop();
-    if (item.startsWith("--")) {
-      key = item.slice("--".length);
-      const val = [];
-      while (items.length > 0 && !items[items.length - 1].startsWith("--")) {
-        val.push(items.pop());
-      }
-      if (val.length > 0) {
-        args[key] = val.length === 1 ? val[0] : val;
-      }
+    // TODO build images
+    // $ for file in client/images/*.jpeg; do cwebp "$file" -o "${file%.*}.webp"; done
+    const { manifest } = parseArgv();
+    if (manifest) {
+      await writeManifest();
+    } else {
+      await prebuildRoutes();
+      console.info((await build()).toString({ colors: true }));
+      await cpCitiesJSON();
+      await writeManifest();
+      await writeApis();
+      await writeDocs();
     }
-  }
-  return args;
+  })();
 }
 
 async function cpCitiesJSON() {

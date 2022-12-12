@@ -1,12 +1,12 @@
 .setting-header {
   margin: 0;
   padding: 10px 0;
-  background-color: var(--content-bg-color);
+  background-color: var(--bg-color);
 }
 
 .setting {
   padding-bottom: 1rem;
-  background-color: var(--content-bg-color);
+  background-color: var(--bg-color);
 }
 
 .setting-city p {
@@ -50,7 +50,7 @@
 .setting-cityselect {
   min-width: 50px;
   text-align: right;
-  color: var(--text-color);
+  color: var(--ft-color);
 }
 
 .setting-citylist span {

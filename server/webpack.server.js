@@ -52,11 +52,15 @@ const jsRule = [
 ];
 const assetRule = [
   {
-    test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/i,
+    test: /\.(png|jpe?g|gif|webp|svg|eot|ttf|woff|woff2)$/i,
     type: "asset",
     generator: {
       emit: false,
     },
+  },
+  {
+    test: /favicon(_x\d+)?.(webp|svg)$/i, // favicon always as resource
+    type: "asset/resource",
   },
 ];
 const serverCssRule = [

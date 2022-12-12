@@ -1,5 +1,6 @@
 client/shared_internal_routes.js
 .DS_Store
+.webpack
 node_modules/
 public/
 server_lib/

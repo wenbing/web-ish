@@ -3,7 +3,9 @@ const http = require("http");
 const path = require("path");
 const serveHandler = require("serve-handler");
 const jwt = require("jsonwebtoken");
-const { v4: uuidv4 } = require("uuid");
+const etag = require("etag");
+const cookie = require("cookie");
+const { v1: uuidv1, v4: uuidv4 } = require("uuid");
 const {
   pathToRegexp,
   match: ptrMatch,
@@ -25,30 +27,57 @@ function isDoc(req) {
       : req.url.slice(0, req.url.indexOf("?"));
   const extname = path.extname(pathname);
   const isDoc =
-    req.headers.accept &&
-    req.headers.accept.indexOf("text/html") !== -1 &&
-    (extname === "" || extname === ".html");
+    (extname === "" &&
+      req.headers.accept &&
+      req.headers.accept.indexOf("text/html") !== -1) ||
+    extname === ".html";
   return isDoc;
 }
 
 function isApi(req /*, res, opts*/) {
+  const pathname =
+    req.url.indexOf("?") === -1
+      ? req.url
+      : req.url.slice(0, req.url.indexOf("?"));
+  const isExtJSON = path.extname(pathname) === ".json";
   const isApiEndpoint = req.url.startsWith(`${publicPath}/api/`);
   const isFetchRequest =
     (req.headers["x-requested-with"] || "").toLowerCase() === "fetch";
-  return isApiEndpoint || isFetchRequest;
+  const isResource = ["manifest.webmanifest", "sw.js"].includes(
+    path.basename(pathname)
+  );
+  return isApiEndpoint || isFetchRequest || isExtJSON || isResource;
 }
 
 function getProps(req, res, props = {}) {
   const url = req.url;
+  // static?
+  // shared? server only?
   const headerKeys = [
-    "x-forwarded-proto",
+    /* shared */
     "host",
-    "x-requested-with",
-    "x-request-id",
     "user-agent",
+    "x-forwarded-proto",
+    "x-requested-with",
+
+    /* meta */
+    "theme-color",
+
+    /* server only */
+    "referer",
+    /* variable */
+    "if-none-match", // http header
+
+    /* variable */
+    "token", // read from document.cookie
+    "x-request-id", // read from document.cookie
   ];
+  const defaults = {
+    ["x-forwarded-proto"]: req.socket.encrypted ? "https" : "http",
+    "theme-color": { light: "#f5f7f0", dark: "#181a0e" },
+  };
   const headers = {
-    ["x-forwarded-proto"]: "http", // default value
+    ...defaults,
     ...pick(req.headers, headerKeys),
     ...props.headers,
   };
@@ -60,22 +89,37 @@ async function docHandler(req, res, opts) {
   const tokenPayload = { sub: "API" };
   const tokenOpts = { algorithm: "HS256", expiresIn: "7200s" };
   const token = jwt.sign(tokenPayload, secret, tokenOpts);
-  const id = uuidv4();
-  const props = getProps(req, res, { headers: { token, "x-request-id": id } });
+  const reqid = uuidv4();
+  const cookieOpts = {
+    path: publicPath,
+    sameSite: true,
+    maxAge: 60 * 60 * 2,
+    secure: true,
+  };
+  const setCookie = [
+    cookie.serialize("token", token, cookieOpts),
+    cookie.serialize("x-request-id", reqid, cookieOpts),
+  ];
+  const props = getProps(req, res, {
+    headers: { token, "x-request-id": reqid },
+  });
   const docOpts = { serverlibDir, ...opts };
-  const docHeaders = { "Content-Type": "text/html" };
+  let [statusCode, headers, body] = [];
   try {
     const doc = await createDoc(props, docOpts);
-    res.writeHead(200, docHeaders);
-    res.end(doc);
+    const tag = etag(doc, {});
+    if (tag === req.headers["if-none-match"]) {
+      [statusCode, headers, body] = [304];
+    } else {
+      [statusCode, headers, body] = [200, { etag: tag }, doc];
+    }
   } catch (error) {
     opts.logger.error("createDoc met error:", error);
     const doc = await createError({ ...props, error }, docOpts);
-    const statusCode = 500;
-    const statusMessage = http.STATUS_CODES[statusCode];
-    res.writeHead(statusCode, statusMessage, docHeaders);
-    res.end(doc);
+    [statusCode, headers, body] = [500, {}, doc];
   }
+  headers = { "set-cookie": setCookie, ...headers };
+  return [statusCode, headers, body];
 }
 
 const sourceToHandlers = {
@@ -102,11 +146,11 @@ const apiRoutes = Object.entries(sourceToHandlers).map(
 );
 
 async function apiHandler(req, res, opts = {}) {
-  const apiHeaders = { "Content-Type": "application/json" };
+  const apiHeaders = { "Content-Type": "application/json; charset=utf-8" };
   const _404 = () => {
     const statusCode = 404;
-    res.writeHead(statusCode, http.STATUS_CODES[statusCode], apiHeaders);
-    res.end(JSON.stringify(http.STATUS_CODES[statusCode]));
+    const body = JSON.stringify(http.STATUS_CODES[statusCode]);
+    return [statusCode, apiHeaders, body];
   };
   const headers = req.headers;
   const { pathname, search } = new URL(`http://${headers.host}${req.url}`);
@@ -126,40 +170,68 @@ async function apiHandler(req, res, opts = {}) {
     return _404();
   }
   const params = new URLSearchParams(search.slice(1));
-  const token = headers.token || params.get("token");
+  const cookies = cookie.parse(req.headers.cookie || "");
+  const token = cookies.token || params.get("token");
   if (!token) {
-    throw new Error(`token is required`);
+    const error = new Error(`token is required`);
+    error.statusCode = 412;
+    throw error;
   }
   jwt.verify(token, secret, { algorithms: "HS256" });
   const props = { ...getProps(req, res), params: matched.params };
   const results = await matched.handler(props, opts);
-  res.writeHead(200, apiHeaders);
-  res.write(JSON.stringify(results));
-  res.end();
+  const body = JSON.stringify(results);
+  return [200, apiHeaders, body];
 }
 
 async function reqHandler(req, res, opts) {
   if (!req.url.startsWith(publicPath)) {
-    throw new Error(`req.url should startsWith ${publicPath}: ${req.url}`);
+    const ex = new Error(`req.url should startsWith ${publicPath}: ${req.url}`);
+    ex.statusCode = 400;
+    throw ex;
   }
 
-  if (req.url === "/web-ish/MP_verify_ro7z5FgtK3kjCaRb.txt") {
-    res.end("ro7z5FgtK3kjCaRb");
-    return;
+  if (req.url === `${publicPath}/MP_verify_ro7z5FgtK3kjCaRb.txt`) {
+    return "ro7z5FgtK3kjCaRb";
+  }
+
+  if (req.url === `${publicPath}/manifest.webmanifest`) {
+    const id = process.env.NODE_ENV === "development" ? uuidv1() : "";
+    const handler = (await import(`./manifest.mjs?id=${id}`)).handler;
+    let [statusCode, headers, body] = await handler({ headers: req.headers });
+    if (body !== undefined) body = JSON.stringify(body);
+    return [statusCode, headers, body];
+  }
+
+  if (req.url === `${publicPath}/sw.js`) {
+    const id = process.env.NODE_ENV === "development" ? uuidv1() : "";
+    const handler = (await import(`./sw_worker.mjs?id=${id}`)).handler;
+    return await handler({ headers: req.headers });
   }
 
   if (isApi(req)) {
-    await apiHandler(req, res);
-    return;
+    return await apiHandler(req, res);
   }
   const publicDir = dirs.publicDir(publicPath);
   if (isDoc(req)) {
-    await docHandler(req, res, { ...opts, publicDir });
-    return;
+    return await docHandler(req, res, { ...opts, publicDir });
   }
   // isAssets
   req.url = req.url.slice(publicPath.length);
-  const serveOpts = { public: publicDir, etag: true };
+  const customHeaders = [];
+  if (process.env.NODE_ENV === "production") {
+    const cacheControl = {
+      source: "**/*",
+      headers: [{ key: "Cache-Control", value: "public, max-age=31536000" }],
+    };
+    customHeaders.push(cacheControl);
+  }
+  const serveOpts = {
+    cleanUrls: false,
+    etag: true,
+    headers: customHeaders,
+    public: publicDir,
+  };
   await serveHandler(req, res, serveOpts);
 }
 

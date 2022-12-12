@@ -6,7 +6,7 @@ async function wxConfig(props) {
   const uri = `https://hidden-reality.zhengwenbing.com/fetchByAppId?type=jsapi_ticket&token=${headers.token}`;
   const res = await fetch(uri, {
     mode: "cors",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json; charset=utf-8" },
   });
   const jsapi_ticket = await res.json();
   const timestamp = Date.now() / 1000;

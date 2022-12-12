@@ -39,8 +39,12 @@ const cssRule = [
 ];
 const assetRule = [
   {
-    test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/i,
+    test: /\.(png|webp|jpe?g|gif|svg|eot|ttf|woff|woff2)$/i,
     type: "asset",
+  },
+  {
+    test: /favicon(_x\d+)?.(webp|svg)$/i, // favicon.webp always as resource
+    type: "asset/resource",
   },
 ];
 const entry = {
@@ -108,10 +112,9 @@ if (mode === "development") {
     return !/\.hot-update\./.test(filepath);
   };
   client.devServer = {
-    hot: true,
-    // port: 3000,
-    port: 80,
-    allowedHosts: [".zhengwenbing.com"],
+    hot: "only",
+    port: 443,
+    allowedHosts: [".zhengwenbing.com", "192.168.3.41"],
     setupMiddlewares,
     static: {
       directory: publicDir,
@@ -120,6 +123,13 @@ if (mode === "development") {
       watch: false,
     },
     devMiddleware: { publicPath, writeToDisk },
+    server: {
+      type: "https",
+      options: {
+        key: path.join(__dirname, "../.webpack/local.zhengwenbing.com-key.pem"),
+        cert: path.join(__dirname, "../.webpack/local.zhengwenbing.com.pem"),
+      },
+    },
   };
 } else if (mode === "production") {
   const cacheGroups = {

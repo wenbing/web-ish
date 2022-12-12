@@ -1,7 +1,11 @@
 import ReactDOM from "react-dom/client";
 
-import { match } from "./shared_routes.mjs";
+import { match, publicPath } from "./shared_routes.mjs";
 import "./client.css";
+import "./favicon.webp";
+import "./favicon_x192.webp";
+// import "./favicon_x512.webp";
+import "./favicon_x512.png";
 
 if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 const INITIAL_DATA = window.INITIAL_DATA;
@@ -33,9 +37,11 @@ function clone<T>(o: T, init = {}) {
     const route = { ...matched, Component };
     let data;
     if (typeof Component.getInitialData === "function") {
+      const clientHeaders = pickHeadersFromCookie(["x-request-id", "token"]);
       try {
         data = await Component.getInitialData({
           ...clone(INITIAL_DATA),
+          ...clientHeaders,
           route,
         });
       } catch (ex) {
@@ -62,4 +68,35 @@ function clone<T>(o: T, init = {}) {
   window.addEventListener("popstate", async () => {
     await render(document.location);
   });
+
+  if ("serviceWorker" in navigator) {
+    try {
+      const swUri = `${publicPath}/sw.js`;
+      const swOpts = { scope: "/web-ish/", updateViaCache: "none" as const };
+      await navigator.serviceWorker.register(swUri, swOpts);
+    } catch (error) {
+      console.error(`[service worker registration] failed:`, { error });
+    }
+  }
 })();
+
+function pick(o, keys) {
+  return keys.reduce((acc, key) => {
+    if (o[key] === undefined) {
+      return acc;
+    } else {
+      return { ...acc, [key]: o[key] };
+    }
+  }, {});
+}
+
+function pickHeadersFromCookie(keys) {
+  const cookies = document.cookie
+    .split(";")
+    .map((s) => s.trim())
+    .reduce((acc, item) => {
+      const pair = item.split("=");
+      return { ...acc, [pair[0]]: decodeURIComponent(pair[1]) };
+    }, {});
+  return pick(cookies, keys);
+}

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 // import "weui";
 import Nav from "./Nav";
 import Loading from "./Loading";
-import favicon from "./icon.png";
+import favicon from "./favicon.webp";
 
 const getInWeixin = (props) =>
   props.headers["x-requested-with"] === "com.tencent.mm" ||

@@ -38,46 +38,93 @@ const setupMiddlewares = (middlewares, devServer) => {
   serverCompiler.watch({}, () => {});
 
   const middleware = async (req, res, next) => {
+    const reqid = uuidv4();
+
     logger.info(req.method, req.url);
-    const handlerPath = require.resolve("./handler");
-    clearRequireCache(handlerPath);
+    const logNext = () => {
+      const r = next();
+      logger.info(`${req.method} ${req.url} ${res.statusCode}`);
+      return r;
+    };
 
     const { publicPath } = await import(`../client/shared_routes.mjs`);
     if (!req.url.startsWith(publicPath)) {
-      return next();
+      return logNext();
     }
+
+    const handlerPath = require.resolve("./handler");
+    clearRequireCache(handlerPath);
 
     const { isDoc, isApi } = require(handlerPath);
     const is = { doc: isDoc(req), api: isApi(req, res) };
     if (!(is.doc || is.api)) {
-      return next();
+      return logNext();
     }
 
     if (checkFile(req, res, { publicPath, fs: outputFileSystem })) {
-      console.log(`There is already a file, '${mwName}' will not process.`);
-      return next();
+      // `There is already a file, '${mwName}' will not process.`
+      return logNext();
     }
 
     if (is.doc) {
-      const id = uuidv4();
-      logger.info("    " + JSON.stringify({ "x-request-id": id }));
-      await writeRoutes({ url: req.url, id, compilers });
+      logger.info("    " + JSON.stringify({ "x-request-id": reqid }));
+      await writeRoutes({ url: req.url, id: reqid, compilers });
       clearRequireCache(handlerPath);
     }
 
-    const { reqHandler } = require(handlerPath);
+    let statusCode;
+    let headers;
+    let body;
     try {
-      await reqHandler(req, res, { logger, fs: outputFileSystem });
+      const { reqHandler } = require(handlerPath);
+      const opts = { logger, fs: outputFileSystem };
+      const result = await reqHandler(req, res, opts);
+      if (result === undefined) {
+        logger.info(`${req.method} ${req.url} ${res.statusCode}`);
+        return;
+      }
+      [statusCode, headers, body] = processResult(req, res, { is, result });
     } catch (error) {
-      logger.error(error.stack);
-      safeRespond(req, res, { is, error });
+      logger.error(`req handler throws ${error.stack}`);
+      [statusCode, headers, body] = processError({ is, error });
     }
+    const type = is.api ? "application/json" : "text/html";
+    const defaultHeaders = { "content-type": `${type}; charset=utf-8` };
+    headers = { ...defaultHeaders, ...headers };
+    const statusMessage = http.STATUS_CODES[statusCode];
+    res.writeHead(statusCode, statusMessage, headers);
+    res.end(body);
+    logger.info(`${req.method} ${req.url} ${statusCode}`);
   };
   middlewares.unshift({ name: mwName, middleware });
   return middlewares;
 };
 
 module.exports = setupMiddlewares;
+
+function processResult(req, res, { is, result }) {
+  let statusCode;
+  let headers;
+  let body;
+  if (typeof result === "string") {
+    [statusCode, headers, body] = [200, null, result];
+  } else if (Array.isArray(result)) {
+    [statusCode, headers, body] = result;
+  } else {
+    const ex = new Error(`unspport result: ${result}`);
+    ex.statusCode = 501;
+    [statusCode, headers, body] = processError({ is, error: ex });
+  }
+  return [statusCode, headers, body];
+}
+
+function processError({ is, error }) {
+  const statusCode = error.statusCode || 500;
+  const body = is.api
+    ? JSON.stringify({ code: error.code || -1, message: error.message })
+    : error.message;
+  return [statusCode, null, body];
+}
 
 function logWebpackServer({ logger, stats }) {
   logger.info("server compiler start");
@@ -144,16 +191,4 @@ function checkFile(req, res, { fs, publicPath }) {
   } catch (ex) {
     return false;
   }
-}
-
-function safeRespond(req, res, { is, error }) {
-  const statusCode = error.statusCode || 500;
-  const contentType = is.doc ? "text/html" : "application/json";
-  const headers = { "Content-Type": contentType };
-  const statusMessage = http.STATUS_CODES[statusCode];
-  if (!res.headersSent) res.writeHead(statusCode, statusMessage, headers);
-  const body = is.doc
-    ? error.message
-    : JSON.stringify({ code: error.code || -1, message: error.message });
-  if (!res.writableEnded) res.end(body);
 }

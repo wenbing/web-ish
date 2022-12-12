@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { match, publicPath } from "./shared_routes.mjs";
 import "./Nav.css";
-import favicon from "./icon.png";
+import favicon from "./favicon.svg";
 
 type NavProps = Partial<RouteProps>;
 const classnames = (...args) => args.filter((x) => x).join(" ");
@@ -104,7 +104,12 @@ function Nav(props: NavProps) {
   );
   const logo = (
     <a className="nav-logo" title="Home" href={`${publicPath}/index.html`}>
-      <img src={favicon} alt="Mr. duck in the gragen" />
+      <img
+        src={favicon}
+        alt="Mr. duck in the gragen"
+        width={"180px"}
+        height={"180px"}
+      />
     </a>
   );
   const toggle = (

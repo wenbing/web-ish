@@ -7,7 +7,7 @@ const findPackageJSON = require("find-package-json");
 const { webDir, serverDir, serverlibDir } = require("./dirs.js");
 const { execSync } = require("child_process");
 
-async function walker(filepath, importResolve) {
+async function walker(filepath, { importResolve, visited }) {
   const deps = [];
   const PUSH_DEPS = (f) => deps.push({ relfile: path.relative(webDir, f) });
   const THROW_ERROR = (msg) => {
@@ -100,6 +100,7 @@ async function walker(filepath, importResolve) {
   };
   const visitors = { ImportDeclaration, ImportExpression, CallExpression };
   walk.simple(ast, visitors);
+  visited[filepath] = true;
 
   let results = [];
   for (const dep of deps) {
@@ -116,18 +117,22 @@ async function walker(filepath, importResolve) {
       THROW_ERROR(`Unknown extname: ${extname}, relfile: ${relfile}`);
     }
     if ([".js", ".cjs", ".mjs"].includes(extname)) {
-      results = results.concat(
-        await walker(path.join(webDir, relfile), importResolve)
-      );
+      const subfile = path.join(webDir, relfile);
+      if (visited[subfile]) {
+        continue;
+      }
+      const subs = await walker(subfile, { importResolve, visited });
+      results = results.concat(subs);
     }
   }
   return results;
 }
 
 async function zipFiles() {
-  const importResolve = await (
-    await import("./bundle-import-resolve.mjs")
-  ).default;
+  const visited = {};
+  const { default: importResolve } = await await import(
+    "./bundle-import-resolve.mjs"
+  );
   const serverFile = path.join(serverDir, "server.js");
   const { namedChunkGroups } = require("../server_lib/server-stats.json");
   const chunkFiles = Object.keys(namedChunkGroups)
@@ -135,7 +140,9 @@ async function zipFiles() {
     .map((item) => path.join(serverlibDir, item.name));
 
   let results = await Promise.all(
-    [].concat(serverFile, chunkFiles).map((file) => walker(file, importResolve))
+    []
+      .concat(serverFile, chunkFiles)
+      .map((file) => walker(file, { importResolve, visited }))
   );
   results = [].concat.apply([], results);
   let nodeModules = results
